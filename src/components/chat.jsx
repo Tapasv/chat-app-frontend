@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const SERVER_URL = `http://${import.meta.env.VITE_SERVER_IP}`;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Chat() {
   const [message, setMessage] = useState("");
