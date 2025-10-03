@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const apiadmin = axios.create({
-    baseURL: `https://chat-app-backend-5208.onrender.com`
+    baseURL: `https://chat-app-backend-5208.onrender.com/api/admin`
 })
 
 apiadmin.interceptors.request.use((config) => {
