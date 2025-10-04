@@ -1,7 +1,7 @@
 import { useState, createContext, useEffect } from "react";
 import axios from "axios";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 
 export const Authcntxt = createContext();
 

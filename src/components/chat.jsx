@@ -84,7 +84,14 @@ export default function Chat() {
       auth: { Username: userInstorage.Username, userid: userInstorage._id },
     });
 
-    const socket = socketRef.current;
+    socketRef.current = io(SERVER_URL, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+      timeout: 20000,
+      auth: { Username: userInstorage.Username, userid: userInstorage._id },
+    });
 
     socket.on("onlineUsers", (users) => {
       setOnlineusers(users);
