@@ -829,7 +829,7 @@ export default function Chat() {
         </div>
       ))}
 
-      {showProfileModal && (
+      {/* {showProfileModal && (
         <div className="profile-upload-modal" onClick={() => setShowProfileModal(false)}>
           <div className="profile-upload-content" onClick={(e) => e.stopPropagation()}>
             <h2>Upload Profile Picture</h2>
@@ -853,9 +853,9 @@ export default function Chat() {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
-      {incomingCall && !callAccepted && (
+      {/* {incomingCall && !callAccepted && (
         <div className="call-modal">
           <div className="call-content">
             <div className="call-avatar">
@@ -877,15 +877,15 @@ export default function Chat() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
-      {(stream || callAccepted) && (
+      {/* {(stream || callAccepted) && (
         <div className="call-modal">
           <div className="call-content" style={{ maxWidth: '900px' }}>
             <h2>{activeUser?.Username || incomingCall?.Username}</h2>
             <p className="call-status">{callAccepted ? 'Connected' : 'Calling...'}</p>
 
-            {/* {callType === 'video' && (
+            {callType === 'video' && (
               <div className="video-container">
                 <video ref={partnerVideoRef} autoPlay playsInline className="remote-video" />
                 <video ref={userVideoRef} autoPlay playsInline muted className="local-video" />
@@ -900,7 +900,7 @@ export default function Chat() {
                   (activeUser?.Username || incomingCall?.Username)?.[0]
                 )}
               </div>
-            )} */}
+            )}
 
             <div className="call-actions" style={{ marginTop: '2rem' }}>
               <button className="call-btn reject" onClick={endCall}>
@@ -909,7 +909,7 @@ export default function Chat() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className={`sidebar ${!showUserList ? 'hidden' : ''}`}>
         <div className="sidebar-header">
