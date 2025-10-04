@@ -29,9 +29,20 @@ const Navbar = () => {
                 </div>
             ) : (
                 <div className="Link">
-                    <h1 style={{margin: 0, fontSize: '1.8rem'}}>
-                        💬 <span style={{color: 'var(--primary)'}}>Chatify</span>
-                    </h1>
+                    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem'}}>
+                        <h1 style={{margin: 0, fontSize: '1.8rem'}}>
+                            💬 <span style={{color: 'var(--primary)'}}>Chatify</span>
+                        </h1>
+                        <p style={{
+                            margin: 0, 
+                            fontSize: '0.9rem', 
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            fontWeight: '300',
+                            letterSpacing: '0.5px'
+                        }}>
+                            First time on Chatify? Click <span style={{color: 'var(--primary)', fontWeight: '500'}}>Register</span>
+                        </p>
+                    </div>
                     <div style={{display: 'flex', gap: '1rem'}}>
                         <Link to="/login">
                             <button type="button">Login</button>
