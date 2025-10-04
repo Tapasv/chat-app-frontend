@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -43,6 +44,13 @@ export default function Chat() {
   const partnerVideoRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  if (!currentUser) {
+    navigate('/login');
+  }
+}, [currentUser, navigate]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
