@@ -81,10 +81,6 @@ export default function Chat() {
     if (!userInstorage) return;
 
     socketRef.current = io(SERVER_URL, {
-      auth: { Username: userInstorage.Username, userid: userInstorage._id },
-    });
-
-    socketRef.current = io(SERVER_URL, {
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -92,6 +88,8 @@ export default function Chat() {
       timeout: 20000,
       auth: { Username: userInstorage.Username, userid: userInstorage._id },
     });
+
+    const socket = socketRef.current;
 
     socket.on("onlineUsers", (users) => {
       setOnlineusers(users);
