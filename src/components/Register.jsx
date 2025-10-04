@@ -112,22 +112,37 @@ const Register = () => {
     const handleregister = async (e) => {
         e.preventDefault();
 
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(Email)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+
+        // Domain validation - only allow Gmail, Yahoo, Outlook
+        const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+        const emailDomain = Email.toLowerCase().split('@')[1];
+        if (!allowedDomains.includes(emailDomain)) {
+            toast.error('Please use Gmail, Yahoo, or Outlook email');
+            return;
+        }
+
+        if (Username === "" || Password === "") {
+            toast.error("Username and Password cannot be empty");
+            return;
+        }
+
         try {
-            // Simulated API call - replace with your actual apiauth
             const res = await apiauth.post('/register', { Username, Password, Email, role });
             
-            toast.success(`User: ${Username} created`);
+            toast.success(res.data.message || `User: ${Username} created`);
 
             setTimeout(() => {
                 navigate("/");
             }, 2000);
         }
         catch (err) {
-            if (Username === "" || Password === "") {
-                toast.error("Input field(s) cannot be empty");
-            } else {
-                toast.error(`User: ${Username} already exists`);
-            }
+            toast.error(err.response?.data?.message || "Registration failed");
             console.error(err);
         }
     };
@@ -219,13 +234,13 @@ const Register = () => {
                     <motion.label
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
+                        transition={{ delay: 0.7 }}
                     >
                         <b>Email:</b>
                         <input 
                             type="email" 
                             name="Email" 
-                            placeholder="Enter Email"
+                            placeholder="example@gmail.com"
                             value={Email} 
                             onChange={(e) => setemail(e.target.value)} 
                         />
@@ -237,7 +252,7 @@ const Register = () => {
                         whileTap={{ scale: 0.95 }}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7 }}
+                        transition={{ delay: 0.8 }}
                     >
                         Register
                     </motion.button>
