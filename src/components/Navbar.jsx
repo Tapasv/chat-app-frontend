@@ -28,21 +28,21 @@ const Navbar = () => {
                     </h1>
                 </div>
             ) : (
-                <div className="Link">
-                    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem'}}>
-                        <h1 style={{margin: 0, fontSize: '1.8rem'}}>
-                            💬 <span style={{color: 'var(--primary)'}}>Chatify</span>
-                        </h1>
-                        <p style={{
-                            margin: 0, 
-                            fontSize: '0.9rem', 
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            fontWeight: '300',
-                            letterSpacing: '0.5px'
-                        }}>
-                            First time on Chatify? Click <span style={{color: 'var(--primary)', fontWeight: '500'}}>Register</span>
-                        </p>
-                    </div>
+                <div className="Link" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%'}}>
+                    <h1 style={{margin: 0, fontSize: '1.8rem'}}>
+                        💬 <span style={{color: 'var(--primary)'}}>Chatify</span>
+                    </h1>
+                    
+                    <p style={{
+                        margin: 0, 
+                        fontSize: '0.95rem', 
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        fontWeight: '400',
+                        textAlign: 'center'
+                    }}>
+                        First time on Chatify? Click <span style={{color: 'var(--primary)', fontWeight: '600'}}>Register</span>
+                    </p>
+                    
                     <div style={{display: 'flex', gap: '1rem'}}>
                         <Link to="/login">
                             <button type="button">Login</button>
