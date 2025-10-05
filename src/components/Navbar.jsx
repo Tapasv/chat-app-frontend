@@ -11,28 +11,32 @@ const Navbar = () => {
         <nav>
             {user ? (
                 <div className="Welcome">
-                    <h1 style={{margin: 0}}>
-                        💬 Welcome, <span style={{color: 'var(--primary)'}}>{user.Username}</span>
+                    <h1 style={{ margin: 0 }}>
+                        💬 Welcome, <span style={{ color: 'var(--primary)' }}>{user.Username}</span>
                     </h1>
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => {
-                            logout(); 
-                            navigate('/');
+                            logout();
+                            if (user.role === "Admin") {
+                                navigate("/admin");
+                            } else {
+                                navigate("/chat");
+                            }
                         }}
                     >
                         Logout
                     </button>
-                    <h1 className="chat-hdng" style={{margin: 0}}>
+                    <h1 className="chat-hdng" style={{ margin: 0 }}>
                         {user.role === "Admin" ? "⚙️ Admin Panel" : "🚀 Chatify"}
                     </h1>
                 </div>
             ) : (
-                <div className="Link" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%'}}>
-                    <h1 style={{margin: 0, fontSize: '1.8rem'}}>
-                        💬 <span style={{color: 'var(--primary)'}}>Chatify</span>
+                <div className="Link" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
+                    <h1 style={{ margin: 0, fontSize: '1.8rem' }}>
+                        💬 <span style={{ color: 'var(--primary)' }}>Chatify</span>
                     </h1>
-                    
+
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -52,8 +56,8 @@ const Navbar = () => {
                             </button>
                         </Link>
                     </div>
-                    
-                    <div style={{display: 'flex', gap: '1rem'}}>
+
+                    <div style={{ display: 'flex', gap: '1rem' }}>
                         <Link to="/login">
                             <button type="button">Login</button>
                         </Link>
