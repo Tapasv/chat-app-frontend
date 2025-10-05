@@ -7,11 +7,14 @@ import "react-toastify/dist/ReactToastify.css";
 const ResetPassword = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { token } = useParams();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         if (!password || !confirmPassword) {
             toast.error("Please fill in all fields");
@@ -34,6 +37,7 @@ const ResetPassword = () => {
             }, 2000);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to reset password");
+            setIsSubmitting(false); 
         }
     };
 
@@ -62,7 +66,9 @@ const ResetPassword = () => {
                     />
                 </label>
 
-                <button type="submit">Reset Password</button>
+                <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Resetting" : "Reset Password"}
+                </button>
             </form>
             <ToastContainer />
         </div>
