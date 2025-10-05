@@ -43,36 +43,36 @@ function AppContent() {
 
   return (
     <div className="App-div">
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/admin" element={<Adminpanel />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-        </Routes>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/admin" element={<Adminpanel />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+      </Routes>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          closeOnClick
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        closeOnClick
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }
 
 function App() {
   return (
-    <Authprovider>
-      <AppContent />
-    </Authprovider>
+    <BrowserRouter>
+      <Authprovider>
+        <AppContent />
+      </Authprovider>
+    </BrowserRouter>
   )
 }
 
