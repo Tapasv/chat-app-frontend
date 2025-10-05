@@ -9,10 +9,13 @@ const Register = () => {
     const [Password, setPassword] = useState("");
     const [role, setrole] = useState("");
     const [Email, setemail] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false); 
     const navigate = useNavigate();
 
     const handleregister = async (e) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,6 +37,8 @@ const Register = () => {
             return;
         }
 
+        setIsSubmitting(true) // disabling the button
+
         try {
             const res = await apiauth.post('/register', { Username, Password, Email, role });
             
@@ -46,6 +51,7 @@ const Register = () => {
         catch (err) {
             toast.error(err.response?.data?.message || "Registration failed");
             console.error(err);
+            setIsSubmitting(false); 
         }
     };
 
@@ -94,7 +100,9 @@ const Register = () => {
                     </select>
                 </label>
 
-                <button type="submit">Register</button>
+                <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Registering" : "Register"}
+                </button>
             </form>
             <ToastContainer />
         </div>

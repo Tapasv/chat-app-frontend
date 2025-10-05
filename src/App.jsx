@@ -5,6 +5,8 @@ import Register from "./components/Register"
 import Adminpanel from "./components/Adminpanel"
 import Navbar from "./components/Navbar"
 import Chat from "./components/chat"
+import ForgotPassword from "./components/ForgotPassword"
+import ResetPassword from "./components/ResetPassword"
 import { Authprovider, Authcntxt } from "./context/authcontext"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
@@ -16,8 +18,8 @@ function AppContent() {
   if (isLoading) {
     return (
       <div className="App-div" style={{
-        display: 'flex', 
-        justifyContent: 'center', 
+        display: 'flex',
+        justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh'
       }}>
@@ -49,6 +51,8 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/admin" element={<Adminpanel />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Routes>
 
         <ToastContainer
