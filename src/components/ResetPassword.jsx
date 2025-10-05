@@ -24,11 +24,13 @@ const ResetPassword = () => {
         }
 
         try {
-            const res = await apiauth.post(`/reset-password/${token}`, { password });
+            const res = await apiauth.post(`/reset-password/${token}`, {
+                Password: password  // Changed from lowercase to uppercase
+            });
             toast.success(res.data.message);
-            
+
             setTimeout(() => {
-                navigate('/');
+                navigate('/login');  // Changed from '/' to '/login'
             }, 2000);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to reset password");
@@ -38,11 +40,11 @@ const ResetPassword = () => {
     return (
         <div className="Login-div">
             <h1>Reset Password</h1>
-            
+
             <form onSubmit={handleSubmit}>
                 <label>
                     <b>New Password:</b>
-                    <input 
+                    <input
                         type="password"
                         placeholder="Enter new password"
                         value={password}
@@ -52,7 +54,7 @@ const ResetPassword = () => {
 
                 <label>
                     <b>Confirm Password:</b>
-                    <input 
+                    <input
                         type="password"
                         placeholder="Confirm new password"
                         value={confirmPassword}
