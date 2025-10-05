@@ -69,7 +69,7 @@ const ResetPassword = () => {
                 </label>
 
                 <button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Resetting!" : "Reset Password"}
+                    {isSubmitting ? "Resetting" : "Reset Password"}
                 </button>
             </form>
             <ToastContainer />
