@@ -7,6 +7,16 @@ const Navbar = () => {
     const { logout, user } = useContext(Authcntxt);
     const navigate = useNavigate();
 
+    const handleLogout = async () => {
+        // Save role BEFORE logout clears user
+        const userRole = user?.role;
+        
+        await logout();
+        
+        // Navigate based on the saved role
+        navigate('/login');
+    };
+
     return (
         <nav>
             {user ? (
@@ -16,14 +26,7 @@ const Navbar = () => {
                     </h1>
                     <button
                         type="button"
-                        onClick={() => {
-                            logout();
-                            if (user.role === "Admin") {
-                                navigate("/admin");
-                            } else {
-                                navigate("/chat");
-                            }
-                        }}
+                        onClick={handleLogout}
                     >
                         Logout
                     </button>
@@ -34,7 +37,7 @@ const Navbar = () => {
             ) : (
                 <div className="Link" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
                     <h1 style={{ margin: 0, fontSize: '1.8rem' }}>
-                        💬 <span style={{ color: 'var(--primary)' }}>Chatify</span>
+                        💬 <span style={{ color: 'var(--primary)'}}>Chatify</span>
                     </h1>
 
                     <div style={{
