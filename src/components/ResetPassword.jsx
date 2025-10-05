@@ -26,6 +26,8 @@ const ResetPassword = () => {
             return;
         }
 
+        setIsSubmitting(true)
+
         try {
             const res = await apiauth.post(`/reset-password/${token}`, {
                 Password: password  // Changed from lowercase to uppercase
