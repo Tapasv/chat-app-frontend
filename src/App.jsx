@@ -56,7 +56,7 @@ function AppContent() {
 
       <ToastContainer
         position="top-right"
-        autoClose={3100}
+        autoClose={3000}
         closeOnClick
         draggable
         pauseOnHover

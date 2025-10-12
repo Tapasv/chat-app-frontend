@@ -3,8 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
+import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
-
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Chat() {
@@ -47,10 +47,10 @@ export default function Chat() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  if (!currentUser) {
-    navigate('/login');
-  }
-}, [currentUser, navigate]);
+    if (!currentUser) {
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -928,7 +928,7 @@ export default function Chat() {
             onClick={() => setShowSearch(!showSearch)}
             title="Add Friend"
           >
-            ➕
+            +
           </button>
           <button className="chat-actions-btn">⚙️</button>
         </div>
@@ -1121,14 +1121,21 @@ export default function Chat() {
                   <p>No messages yet. Start the conversation!</p>
                 </div>
               ) : (
-                privateMessage.map((msg, index) => {
-                  const isCurrentUser = msg.sender?.Username === currentUser?.Username;
-                  return (
-                    <div key={msg._id || index} className={`message ${isCurrentUser ? 'sent' : 'received'}`}>
-                      {renderMessage(msg)}
-                    </div>
-                  );
-                })
+                privateMessage.map((msg, index) => (
+                  <MessageItem
+                    key={msg._id || index}
+                    message={msg}
+                    currentUser={currentUser}
+                    onMessageUpdate={(updatedMsg) => {
+                      setPrivateMessage(prev => prev.map(m =>
+                        m._id === updatedMsg._id ? updatedMsg : m
+                      ));
+                    }}
+                    onMessageDelete={(messageId) => {
+                      setPrivateMessage(prev => prev.filter(m => m._id !== messageId));
+                    }}
+                  />
+                ))
               )}
 
               {isUploading && (
