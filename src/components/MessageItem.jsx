@@ -136,7 +136,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 </button>
                             )}
                             
-                            {isCurrentUser && canEditOrDelete() && (
+                            {isCurrentUser && (
                                 <button onClick={() => {
                                     setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
@@ -147,7 +147,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                             )}
                             
                             {/* FOR EVERYONE: Show Delete for Me */}
-                            <button onClick={() => {
+                            <button className='.dlt-msg-btn'  onClick={() => {
                                 setDeleteType('forMe');
                                 setShowDeleteModal(true);
                                 setShowOptions(false);

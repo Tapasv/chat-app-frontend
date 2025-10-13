@@ -1448,20 +1448,6 @@ tbody td {
 }
 
 @media (max-width: 768px) {
-  .whatsapp-container {
-    flex-direction: column;
-    height: 100vh;
-    width: 100%;
-    border-radius: 0;
-  }
-
-  .sidebar {
-    width: 100%;
-    height: auto;
-    max-height: 200px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
 
   .sidebar.hidden {
     display: none;
@@ -1536,7 +1522,7 @@ tbody td {
 }
 
 .options-menu.menu-left {
-    left: 0;
+    left: 5;
     right: auto;
 }
 
