@@ -6,7 +6,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [editContent, setEditContent] = useState(message.text || ''); // Changed from message.content to message.text
+    const [editContent, setEditContent] = useState(message.text || '');
     const [showOptions, setShowOptions] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -29,7 +29,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
 
         try {
             const res = await apimessage.put(`/edit/${message._id}`, {
-                text: editContent // Send as 'text' to match backend
+                text: editContent
             });
 
             toast.success('Message edited');
@@ -91,36 +91,51 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     return (
         <div className={`message ${isCurrentUser ? 'sent' : 'received'}`}>
             <div className="message-wrapper">
-                {isCurrentUser && !isFile && (
-                    <div className="message-options">
-                        <button 
-                            className="options-btn"
-                            onClick={() => setShowOptions(!showOptions)}
-                        >
-                            ⋮
-                        </button>
+                {/* Three-dot menu - SHOW FOR ALL MESSAGES */}
+                <div className="message-options">
+                    <button 
+                        className="options-btn"
+                        onClick={() => setShowOptions(!showOptions)}
+                    >
+                        ⋮
+                    </button>
 
-                        {showOptions && (
-                            <div className="options-menu">
-                                {canEditOrDelete() && (
-                                    <button onClick={() => {
-                                        setIsEditing(true);
-                                        setShowOptions(false);
-                                    }}>
-                                        ✏️ Edit
-                                    </button>
-                                )}
-                                <button onClick={() => {
-                                    setShowDeleteModal(true);
-                                    setShowOptions(false);
-                                }}>
-                                    🗑️ Delete
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    {showOptions && (
+                        <div className="options-menu">
+                            {/* Show Edit and Delete for Everyone ONLY for sent messages */}
+                            {isCurrentUser && !isFile && (
+                                <>
+                                    {canEditOrDelete() && (
+                                        <button onClick={() => {
+                                            setIsEditing(true);
+                                            setShowOptions(false);
+                                        }}>
+                                            ✏️ Edit
+                                        </button>
+                                    )}
+                                    {canEditOrDelete() && (
+                                        <button onClick={() => {
+                                            setShowDeleteModal(true);
+                                            setShowOptions(false);
+                                        }}>
+                                            🗑️ Delete for Everyone
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            
+                            {/* Show Delete for Me for ALL messages */}
+                            <button onClick={() => {
+                                handleDelete('forMe');
+                                setShowOptions(false);
+                            }}>
+                                🗑️ Delete for Me
+                            </button>
+                        </div>
+                    )}
+                </div>
 
+                {/* Message content */}
                 {isEditing ? (
                     <div className="edit-mode">
                         <input
@@ -185,18 +200,15 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                 )}
             </div>
 
+            {/* Delete Modal - Only for "Delete for Everyone" */}
             {showDeleteModal && (
                 <div className="delete-modal" onClick={() => setShowDeleteModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Delete Message?</h3>
-                        <button onClick={() => handleDelete('forMe')}>
-                            Delete for Me
+                        <h3>Delete Message for Everyone?</h3>
+                        <p>This will remove the message for all participants.</p>
+                        <button onClick={() => handleDelete('forEveryone')}>
+                            Yes, Delete for Everyone
                         </button>
-                        {canEditOrDelete() && (
-                            <button onClick={() => handleDelete('forEveryone')}>
-                                Delete for Everyone
-                            </button>
-                        )}
                         <button onClick={() => setShowDeleteModal(false)}>
                             Cancel
                         </button>
