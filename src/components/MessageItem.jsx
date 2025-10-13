@@ -142,7 +142,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                     setShowDeleteModal(true);
                                     setShowOptions(false);
                                 }}>
-                                    🗑️ Delete for Everyone
+                                Delete for Everyone
                                 </button>
                             )}
                             
@@ -152,7 +152,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 setShowDeleteModal(true);
                                 setShowOptions(false);
                             }}>
-                                🗑️ Delete for Me
+                                Delete for Me
                             </button>
                         </div>
                     )}
