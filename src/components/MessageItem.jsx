@@ -9,6 +9,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const [editContent, setEditContent] = useState(message.text || '');
     const [showOptions, setShowOptions] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteType, setDeleteType] = useState(null);
     
     const optionsRef = useRef(null);
 
@@ -59,7 +60,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
         }
     };
 
-    const handleDelete = async (deleteType) => {
+    const handleDeleteConfirm = async () => {
         try {
             const res = await apimessage.delete(`/delete/${message._id}`, {
                 data: { deleteType }
@@ -68,6 +69,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             toast.success(res.data.message);
             setShowDeleteModal(false);
             setShowOptions(false);
+            setDeleteType(null);
 
             if (deleteType === 'forMe') {
                 onMessageDelete(message._id);
@@ -123,7 +125,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                     </button>
 
                     {showOptions && (
-                        <div className="options-menu">
+                        <div className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
                             {/* FOR SENDER: Show Edit and Delete for Everyone (within 15 min) */}
                             {isCurrentUser && !isFile && canEditOrDelete() && (
                                 <button onClick={() => {
@@ -136,6 +138,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                             
                             {isCurrentUser && canEditOrDelete() && (
                                 <button onClick={() => {
+                                    setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
                                     setShowOptions(false);
                                 }}>
@@ -145,7 +148,9 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                             
                             {/* FOR EVERYONE: Show Delete for Me */}
                             <button onClick={() => {
-                                handleDelete('forMe');
+                                setDeleteType('forMe');
+                                setShowDeleteModal(true);
+                                setShowOptions(false);
                             }}>
                                 🗑️ Delete for Me
                             </button>
@@ -220,19 +225,27 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
 
             {/* Delete Modal */}
             {showDeleteModal && (
-                <div className="delete-modal" onClick={() => setShowDeleteModal(false)}>
+                <div className="delete-modal" onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteType(null);
+                }}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Delete Message for Everyone?</h3>
-                        <p style={{ color: '#666', fontSize: '14px' }}>
-                            This will remove the message for all participants.
+                        <h3>Delete Message?</h3>
+                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '1rem' }}>
+                            {deleteType === 'forEveryone' 
+                                ? 'This will remove the message for all participants.' 
+                                : 'This will remove the message from your view only.'}
                         </p>
                         <button 
-                            onClick={() => handleDelete('forEveryone')}
+                            onClick={handleDeleteConfirm}
                             style={{ background: '#e50914' }}
                         >
-                            Yes, Delete for Everyone
+                            {deleteType === 'forEveryone' ? 'Delete for Everyone' : 'Delete for Me'}
                         </button>
-                        <button onClick={() => setShowDeleteModal(false)}>
+                        <button onClick={() => {
+                            setShowDeleteModal(false);
+                            setDeleteType(null);
+                        }}>
                             Cancel
                         </button>
                     </div>

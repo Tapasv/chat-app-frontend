@@ -1528,3 +1528,84 @@ tbody td {
     font-size: 0.85rem;
   }
 }
+
+/* Fix menu positioning */
+.options-menu.menu-right {
+    right: 0;
+    left: auto;
+}
+
+.options-menu.menu-left {
+    left: 0;
+    right: auto;
+}
+
+/* Mobile specific fixes */
+@media (max-width: 768px) {
+    .message-wrapper {
+        max-width: 100%;
+    }
+
+    .options-menu {
+        min-width: 160px;
+        max-width: 200px;
+    }
+
+    .options-menu.menu-right {
+        right: 0;
+    }
+
+    .options-menu.menu-left {
+        left: 0;
+    }
+
+    .message {
+        max-width: 85% !important;
+    }
+
+    .message-bubble {
+        font-size: 0.9rem;
+        padding: 0.7rem 1rem;
+    }
+
+    .edit-mode {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .edit-mode input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .edit-mode button {
+        width: 100%;
+    }
+
+    .modal-content {
+        min-width: 280px;
+        max-width: 90%;
+        padding: 20px;
+    }
+
+    .delete-modal {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .options-menu {
+        min-width: 140px;
+        font-size: 13px;
+    }
+
+    .options-menu button {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .message-bubble {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.9rem;
+    }
+}
