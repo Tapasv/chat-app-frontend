@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import apimessage from '../apimessage';
 
@@ -9,10 +9,29 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const [editContent, setEditContent] = useState(message.text || '');
     const [showOptions, setShowOptions] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    
+    const optionsRef = useRef(null);
 
     const isCurrentUser = message.sender?._id === currentUser?._id;
     const isDeletedForEveryone = message.deletedForEveryone;
     const isFile = message.fileUrl;
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (optionsRef.current && !optionsRef.current.contains(event.target)) {
+                setShowOptions(false);
+            }
+        };
+
+        if (showOptions) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showOptions]);
 
     const canEditOrDelete = () => {
         const messageTime = new Date(message.createdAt).getTime();
@@ -91,43 +110,42 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     return (
         <div className={`message ${isCurrentUser ? 'sent' : 'received'}`}>
             <div className="message-wrapper">
-                {/* Three-dot menu - SHOW FOR ALL MESSAGES */}
-                <div className="message-options">
+                {/* Three-dot menu */}
+                <div className="message-options" ref={optionsRef}>
                     <button 
                         className="options-btn"
-                        onClick={() => setShowOptions(!showOptions)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowOptions(!showOptions);
+                        }}
                     >
                         ⋮
                     </button>
 
                     {showOptions && (
                         <div className="options-menu">
-                            {/* Show Edit and Delete for Everyone ONLY for sent messages */}
-                            {isCurrentUser && !isFile && (
-                                <>
-                                    {canEditOrDelete() && (
-                                        <button onClick={() => {
-                                            setIsEditing(true);
-                                            setShowOptions(false);
-                                        }}>
-                                            ✏️ Edit
-                                        </button>
-                                    )}
-                                    {canEditOrDelete() && (
-                                        <button onClick={() => {
-                                            setShowDeleteModal(true);
-                                            setShowOptions(false);
-                                        }}>
-                                            🗑️ Delete for Everyone
-                                        </button>
-                                    )}
-                                </>
+                            {/* FOR SENDER: Show Edit and Delete for Everyone (within 15 min) */}
+                            {isCurrentUser && !isFile && canEditOrDelete() && (
+                                <button onClick={() => {
+                                    setIsEditing(true);
+                                    setShowOptions(false);
+                                }}>
+                                    ✏️ Edit
+                                </button>
                             )}
                             
-                            {/* Show Delete for Me for ALL messages */}
+                            {isCurrentUser && canEditOrDelete() && (
+                                <button onClick={() => {
+                                    setShowDeleteModal(true);
+                                    setShowOptions(false);
+                                }}>
+                                    🗑️ Delete for Everyone
+                                </button>
+                            )}
+                            
+                            {/* FOR EVERYONE: Show Delete for Me */}
                             <button onClick={() => {
                                 handleDelete('forMe');
-                                setShowOptions(false);
                             }}>
                                 🗑️ Delete for Me
                             </button>
@@ -200,13 +218,18 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                 )}
             </div>
 
-            {/* Delete Modal - Only for "Delete for Everyone" */}
+            {/* Delete Modal */}
             {showDeleteModal && (
                 <div className="delete-modal" onClick={() => setShowDeleteModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>Delete Message for Everyone?</h3>
-                        <p>This will remove the message for all participants.</p>
-                        <button onClick={() => handleDelete('forEveryone')}>
+                        <p style={{ color: '#666', fontSize: '14px' }}>
+                            This will remove the message for all participants.
+                        </p>
+                        <button 
+                            onClick={() => handleDelete('forEveryone')}
+                            style={{ background: '#e50914' }}
+                        >
                             Yes, Delete for Everyone
                         </button>
                         <button onClick={() => setShowDeleteModal(false)}>
