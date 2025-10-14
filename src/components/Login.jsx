@@ -5,6 +5,7 @@ import apiauth from "../apiauth";
 import { Authcntxt } from "../context/authcontext";
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 const Login = () => {
     const [Username, setUsername] = useState("");
@@ -56,7 +57,7 @@ const Login = () => {
 
     return (
         <div className="Login-div">
-            <h1>🔐 Login</h1>
+            <h1><LogIn style={{ display: 'inline', marginRight: '0.3rem' }} size={29} /> Login</h1>
             <form action="" onSubmit={handlelogin}>
                 <label>
                     <b>Username:</b>
