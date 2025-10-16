@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, UserX, Trash2 } from 'lucide-react'
+import { MoreVertical, UserX, Trash2, Settings } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -1026,7 +1026,38 @@ export default function Chat() {
           >
             +
           </button>
-          <button className="chat-actions-btn">⚙️</button>
+          <div ref={settingsMenuRef} style={{ position: 'relative' }}>
+            <button
+              className="chat-actions-btn"
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              title="Settings"
+            >
+              <Settings size={20} />
+            </button>
+
+            {showSettingsMenu && (
+              <div className="options-menu" style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '0.5rem',
+                minWidth: '180px'
+              }}>
+                <button onClick={() => {
+                  setShowProfileModal(true);
+                  setShowSettingsMenu(false);
+                }}>
+                  👤 Edit Profile
+                </button>
+                <button onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}>
+                  🚪 Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {showSearch && (
