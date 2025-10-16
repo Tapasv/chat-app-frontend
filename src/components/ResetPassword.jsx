@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+import { MessageCircle } from 'lucide-react';
 import apiauth from "../apiauth";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -39,13 +40,17 @@ const ResetPassword = () => {
             }, 2000);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to reset password");
-            setIsSubmitting(false); 
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div className="Login-div">
-            <h1>Reset Password</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <MessageCircle style={{ color: 'var(--primary)' }} size={28} />
+                <span style={{ color: 'var(--primary)' }}>Chatify</span>
+            </h1>
+            <h2 style={{ marginTop: '1rem' }}>Reset Password</h2>
 
             <form onSubmit={handleSubmit}>
                 <label>

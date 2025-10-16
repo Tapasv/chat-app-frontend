@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import apiauth from "../apiauth";
+import { MessageCircle } from 'lucide-react';
 import { Authcntxt } from "../context/authcontext";
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
@@ -10,7 +11,7 @@ import { LogIn } from "lucide-react";
 const Login = () => {
     const [Username, setUsername] = useState("");
     const [Password, setPassword] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false); 
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const { login, user } = useContext(Authcntxt);
 
@@ -57,7 +58,9 @@ const Login = () => {
 
     return (
         <div className="Login-div">
-            <h1><LogIn style={{ display: 'inline', marginRight: '0.3rem' }} size={29} /> Login</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <LogIn size={28} /> Login
+            </h1>
             <form action="" onSubmit={handlelogin}>
                 <label>
                     <b>Username:</b>
@@ -88,7 +91,7 @@ const Login = () => {
                 </div>
 
                 <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Logging In" : "Login"}
+                    {isSubmitting ? "Logging In" : "Login"}
                 </button>
             </form>
             <ToastContainer />

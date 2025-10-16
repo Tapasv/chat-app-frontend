@@ -2,7 +2,7 @@ import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, LogOut, Settings, Rocket, UserPlus, LogIn } from "lucide-react";
+import { MessageCircle, Settings, Rocket, UserPlus, LogIn } from "lucide-react";
 
 const Navbar = () => {
     const { logout, user } = useContext(Authcntxt);
@@ -26,7 +26,7 @@ const Navbar = () => {
                         {user.role === "Admin" ? (
                             <><Settings style={{ display: 'inline', marginRight: '0.3rem' }} size={24} /> Admin Panel</>
                         ) : (
-                            <><Rocket style={{ display: 'inline', marginRight: '0.3rem' }} size={24} /> Chatify</>
+                            <><MessageCircle style={{ display: 'inline', marginRight: '0.3rem' }} size={28} /> <span style={{ color: 'var(--primary)' }}>Chatify</span></>
                         )}
                     </h1>
                 </div>

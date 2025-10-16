@@ -6,7 +6,7 @@ import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut } from 'lucide-react'
+import { MoreVertical, UserX, Trash2, Settings, LogOut, MessageCircle  } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
