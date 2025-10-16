@@ -294,6 +294,18 @@ export default function Chat() {
     loadBlockedUsers();
   }, []);
 
+  // useEffect to close settings menu when clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
+        setShowSettingsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const searchUsers = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
