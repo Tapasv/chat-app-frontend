@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { apiadmin } from "../apiadmin";
 import { ToastContainer, toast } from "react-toastify";
 import { useContext } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from "react-router-dom";
 import { Authcntxt } from "../context/authcontext";
 import { LogOut } from "lucide-react";
+import Chat from "./chat";
 import 'react-toastify/dist/ReactToastify.css';
 
 const Adminpanel = () => {
@@ -135,7 +137,13 @@ const Adminpanel = () => {
         </table>
       )}
       <ToastContainer />
+
+      <Routes>
+        <Route path="/chat" element={<Chat />} />
+      </Routes>
     </div>
+
+
   );
 };
 
