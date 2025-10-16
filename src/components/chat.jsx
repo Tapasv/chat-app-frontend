@@ -1016,27 +1016,8 @@ export default function Chat() {
             )}
           </div>
           <div className="user-info">
-            <h4 className="user-name">
-              {friends.Username}
-              {blockedUser.includes(friends._id) && (
-                <span style={{
-                  marginLeft: '0.5rem',
-                  fontSize: '0.65rem',
-                  padding: '0.15rem 0.4rem',
-                  background: 'var(--danger)',
-                  borderRadius: '3px',
-                  fontWeight: '500'
-                }}>
-                  Blocked
-                </span>
-              )}
-            </h4>
-            <p className="user-status">
-              {blockedUser.includes(friends._id)
-                ? "Blocked"
-                : onlineUsers.includes(friends._id) ? "Online" : "Offline"
-              }
-            </p>
+            <h4 className="user-name">{currentUser?.Username || 'User'}</h4>
+            <p className="user-status">Online</p>
           </div>
           <button
             className="chat-actions-btn"
@@ -1158,9 +1139,26 @@ export default function Chat() {
                     )}
                   </div>
                   <div className="user-info">
-                    <h4 className="user-name">{friend.Username}</h4>
+                    <h4 className="user-name">
+                      {friend.Username}
+                      {blockedUser.includes(friend._id) && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.65rem',
+                          padding: '0.15rem 0.4rem',
+                          background: 'var(--danger)',
+                          borderRadius: '3px',
+                          fontWeight: '500'
+                        }}>
+                          Blocked
+                        </span>
+                      )}
+                    </h4>
                     <p className="user-status">
-                      {onlineUsers.includes(friend._id) ? "Online" : "Offline"}
+                      {blockedUser.includes(friend._id)
+                        ? "Blocked"
+                        : onlineUsers.includes(friend._id) ? "Online" : "Offline"
+                      }
                     </p>
                   </div>
                 </div>
