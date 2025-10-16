@@ -48,6 +48,9 @@ export default function Chat() {
   const [blockedUser, setBlockedUser] = useState([])
   const chatMenuRef = useRef(null)
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const settingsMenuRef = useRef(null)
+
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
