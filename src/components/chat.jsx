@@ -267,6 +267,24 @@ export default function Chat() {
     }).then(res => setSentRequests(res.data)).catch(console.error);
   }, []);
 
+  useEffect(() => {
+    const loadBlockedUsers = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
+
+        const res = await axios.get(`${SERVER_URL}/api/chat/blocked-users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBlockedUser(res.data); // Array of blocked user IDs
+      } catch (err) {
+        console.error("Failed to load blocked users:", err);
+      }
+    };
+
+    loadBlockedUsers();
+  }, []);
+
   const searchUsers = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -401,6 +419,24 @@ export default function Chat() {
     }
   };
 
+  const UnblockUser = async (userId) => {
+    if (!window.confirm(`Are you sure you want to unblock ${activeUser.Username}?`)) return;
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.delete(`${SERVER_URL}/api/chat/unblock/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`${activeUser.Username} unblocked successfully`);
+      setBlockedUser(prev => prev.filter(id => id !== userId));
+      setShowChatMenu(false);
+    }
+    catch (err) {
+      toast.error("Failed to unblock user");
+      console.error(err);
+    }
+  };
+
   const ClearChat = async () => {
     if (!window.confirm(`Are you sure you want to clear this chat? This action cannot be undone.`)) return;
 
@@ -429,7 +465,7 @@ export default function Chat() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []); 
+  }, []);
 
   const sendMessage = () => {
     if (!message.trim() || !activeUser) return;
@@ -1177,10 +1213,17 @@ export default function Chat() {
                     marginTop: '0.5rem',
                     minWidth: '180px'
                   }}>
-                    <button onClick={() => BlockUser(activeUser._id)}>
-                      <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
-                      Block User
-                    </button>
+                    {blockedUser.includes(activeUser._id) ? (
+                      <button onClick={() => UnblockUser(activeUser._id)}>
+                        <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
+                        Unblock User
+                      </button>
+                    ) : (
+                      <button onClick={() => BlockUser(activeUser._id)}>
+                        <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
+                        Block User
+                      </button>
+                    )}
                     <button onClick={ClearChat}>
                       <Trash2 size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
                       Clear Chat
