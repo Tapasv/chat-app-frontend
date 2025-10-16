@@ -22,7 +22,7 @@ const Navbar = () => {
         <nav>
             {user ? (
                 <div className="Welcome">
-                    <h1 style={{ margin: 0 }}>
+                    {/* <h1 style={{ margin: 0 }}>
                         <MessageCircle style={{ display: 'inline', marginRight: '0.3rem' }} size={24} /> Welcome, <span style={{ color: 'var(--primary)' }}>{user.Username}</span>
                     </h1>
                     <button
@@ -30,7 +30,7 @@ const Navbar = () => {
                         type="button"
                         onClick={handleLogout}>
                         <LogOut style={{ display: 'inline', marginRight: '0.3rem' }} size={18} /> Logout
-                    </button>
+                    </button> */}
                     <h1 className="chat-hdng">
                         {user.role === "Admin" ? (
                             <><Settings style={{ display: 'inline', marginRight: '0.3rem' }} size={24} /> Admin Panel</>

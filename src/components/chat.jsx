@@ -1046,6 +1046,7 @@ export default function Chat() {
               className="chat-actions-btn"
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               title="Settings"
+              style={{ color: 'white' }}
             >
               <Settings size={20} />
             </button>
@@ -1056,7 +1057,8 @@ export default function Chat() {
                 top: '100%',
                 right: 0,
                 marginTop: '0.5rem',
-                minWidth: '180px'
+                minWidth: '180px',
+                zIndex: 1000
               }}>
                 <button onClick={() => {
                   setShowProfileModal(true);
@@ -1187,7 +1189,7 @@ export default function Chat() {
                   <div className="user-info">
                     <h4 className="user-name">
                       {friend.Username}
-                      {blockedUser.includes(friend._id) && (
+                      {/* {blockedUser.includes(friend._id) && (
                         <span style={{
                           marginLeft: '0.5rem',
                           fontSize: '0.65rem',
@@ -1198,7 +1200,7 @@ export default function Chat() {
                         }}>
                           Blocked
                         </span>
-                      )}
+                      )} */}
                     </h4>
                     <p className="user-status">
                       {blockedUser.includes(friend._id)
