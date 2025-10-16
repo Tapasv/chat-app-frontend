@@ -117,6 +117,12 @@ export default function Chat() {
 
         if (!currentActive) return prev;
 
+        // Check if sender is blocked
+        if (blockedUser.includes(data.sender._id)) {
+          console.log("Message blocked from:", data.sender.Username);
+          return prev; // Don't add message from blocked user
+        }
+
         const isRelevant =
           (data.sender._id === currentActive._id && data.receiver._id === currentUser._id) ||
           (data.sender._id === currentUser._id && data.receiver._id === currentActive._id);
@@ -404,14 +410,13 @@ export default function Chat() {
     if (!window.confirm(`Are you sure you want to block ${activeUser.Username}?`)) return;
 
     try {
-      const token = localStorage.getItem("accessToken"); // Fixed typo: was "acessToken"
+      const token = localStorage.getItem("accessToken");
       await axios.post(`${SERVER_URL}/api/chat/block/${userId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(`${activeUser.Username} blocked successfully`);
       setBlockedUser(prev => [...prev, userId]);
       setShowChatMenu(false);
-      leavePrivateChat();
     }
     catch (err) {
       toast.error("Failed to block user");
@@ -1011,7 +1016,27 @@ export default function Chat() {
             )}
           </div>
           <div className="user-info">
-            <h3 className="user-name">{currentUser?.Username || 'User'}</h3>
+            <h4 className="user-name">
+              {friends.Username}
+              {blockedUser.includes(friends._id) && (
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontSize: '0.65rem',
+                  padding: '0.15rem 0.4rem',
+                  background: 'var(--danger)',
+                  borderRadius: '3px',
+                  fontWeight: '500'
+                }}>
+                  Blocked
+                </span>
+              )}
+            </h4>
+            <p className="user-status">
+              {blockedUser.includes(friends._id)
+                ? "Blocked"
+                : onlineUsers.includes(friends._id) ? "Online" : "Offline"
+              }
+            </p>
           </div>
           <button
             className="chat-actions-btn"
@@ -1194,9 +1219,26 @@ export default function Chat() {
               </div>
 
               <div className="chat-info">
-                <h3 className="chat-name">{activeUser.Username}</h3>
+                <h3 className="chat-name">
+                  {activeUser.Username}
+                  {blockedUser.includes(activeUser._id) && (
+                    <span style={{
+                      marginLeft: '0.5rem',
+                      fontSize: '0.75rem',
+                      padding: '0.2rem 0.5rem',
+                      background: 'var(--danger)',
+                      borderRadius: '4px',
+                      fontWeight: '500'
+                    }}>
+                      Blocked
+                    </span>
+                  )}
+                </h3>
                 <p className="chat-status">
-                  {onlineUsers.includes(activeUser._id) ? 'Online' : 'Offline'}
+                  {blockedUser.includes(activeUser._id)
+                    ? 'You blocked this user'
+                    : onlineUsers.includes(activeUser._id) ? 'Online' : 'Offline'
+                  }
                 </p>
               </div>
 
@@ -1286,47 +1328,63 @@ export default function Chat() {
             </div>
 
             <div className="message-input-area">
-              <div className="message-input-container">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  style={{ display: 'none' }}
-                  accept="*/*"
-                />
-                <button
-                  className="input-action-btn"
-                  onClick={triggerFileUpload}
-                  disabled={isUploading}
-                  title="Upload file"
-                >
-                  {isUploading ? '⏳' : '📎'}
-                </button>
+              {blockedUser.includes(activeUser._id) ? (
+                <div style={{
+                  padding: '1rem',
+                  textAlign: 'center',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  borderRadius: 'var(--radius)',
+                  margin: '1rem'
+                }}>
+                  <p style={{ color: 'var(--danger)', fontWeight: '500' }}>
+                    You have blocked this user. Unblock to send messages.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="message-input-container">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                      accept="*/*"
+                    />
+                    <button
+                      className="input-action-btn"
+                      onClick={triggerFileUpload}
+                      disabled={isUploading}
+                      title="Upload file"
+                    >
+                      {isUploading ? '⏳' : '📎'}
+                    </button>
 
-                <input
-                  type="text"
-                  placeholder={isUploading ? "Uploading file..." : "Type a message"}
-                  value={message}
-                  onChange={handleInput}
-                  onKeyPress={handleKeyPress}
-                  className="message-input"
-                  disabled={isUploading}
-                />
+                    <input
+                      type="text"
+                      placeholder={isUploading ? "Uploading file..." : "Type a message"}
+                      value={message}
+                      onChange={handleInput}
+                      onKeyPress={handleKeyPress}
+                      className="message-input"
+                      disabled={isUploading}
+                    />
 
-                <button className="input-action-btn">😊</button>
+                    <button className="input-action-btn">😊</button>
 
-                {message.trim() ? (
-                  <button
-                    onClick={sendMessage}
-                    className="send-btn"
-                    disabled={isUploading}
-                  >
-                    ➤
-                  </button>
-                ) : (
-                  <button className="input-action-btn">🎤</button>
-                )}
-              </div>
+                    {message.trim() ? (
+                      <button
+                        onClick={sendMessage}
+                        className="send-btn"
+                        disabled={isUploading}
+                      >
+                        ➤
+                      </button>
+                    ) : (
+                      <button className="input-action-btn">🎤</button>
+                    )}
+                  </div>
+                </>
+              )}
 
               <button
                 onClick={leavePrivateChat}
