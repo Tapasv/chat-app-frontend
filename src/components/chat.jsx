@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
+import { MoreVertical, UserX, Trash2 } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -42,6 +43,10 @@ export default function Chat() {
   const peerRef = useRef(null);
   const userVideoRef = useRef(null);
   const partnerVideoRef = useRef(null);
+
+  const [ShowChatMenu, setShowChatMenu] = useState(false)
+  const [blockedUser, setBlockedUser] = useState([])
+  const chatMenuRef = useRef(null)
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
@@ -376,6 +381,55 @@ export default function Chat() {
     setShowUserList(true);
     localStorage.removeItem("activeUser");
   };
+
+  const BlockUser = async (userId) => {
+    if (!window.confirm(`Are you sure you want to block ${activeUser.Username}?`)) return;
+
+    try {
+      const token = localStorage.getItem("accessToken"); // Fixed typo: was "acessToken"
+      await axios.post(`${SERVER_URL}/api/chat/block/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`${activeUser.Username} blocked successfully`);
+      setBlockedUser(prev => [...prev, userId]);
+      setShowChatMenu(false);
+      leavePrivateChat();
+    }
+    catch (err) {
+      toast.error("Failed to block user");
+      console.error(err);
+    }
+  };
+
+  const ClearChat = async () => {
+    if (!window.confirm(`Are you sure you want to clear this chat? This action cannot be undone.`)) return;
+
+    try {
+      const token = localStorage.getItem("accessToken"); // Fixed typo: was "acessToken"
+      await axios.delete(`${SERVER_URL}/api/chat/clear/${activeUser._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`Chat cleared successfully`);
+      setPrivateMessage([]);
+      setShowChatMenu(false);
+    }
+    catch (err) {
+      toast.error("Failed to clear chat");
+      console.error(err);
+    }
+  };
+
+  // useEffect to close chat menu when clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) {
+        setShowChatMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []); 
 
   const sendMessage = () => {
     if (!message.trim() || !activeUser) return;
@@ -1110,8 +1164,29 @@ export default function Chat() {
                 </p>
               </div>
 
-              <div className="chat-actions">
-                <button>⋮</button>
+              <div className="chat-actions" ref={chatMenuRef} style={{ position: 'relative' }}>
+                <button onClick={() => setShowChatMenu(!ShowChatMenu)}>
+                  <MoreVertical size={20} />
+                </button>
+
+                {ShowChatMenu && (
+                  <div className="options-menu menu-right" style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '0.5rem',
+                    minWidth: '180px'
+                  }}>
+                    <button onClick={() => BlockUser(activeUser._id)}>
+                      <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
+                      Block User
+                    </button>
+                    <button onClick={ClearChat}>
+                      <Trash2 size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
+                      Clear Chat
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
