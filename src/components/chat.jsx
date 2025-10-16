@@ -2,8 +2,11 @@ import axios from "axios";
 import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
-import { useNavigate } from 'react-router-dom';
-import { MoreVertical, UserX, Trash2, Settings } from 'lucide-react'
+import { Authcntxt } from "../context/authcontext";
+import { useContext } from "react";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { MoreVertical, UserX, Trash2, Settings, LogOut } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -24,6 +27,8 @@ export default function Chat() {
   const [searchResults, setSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
+
+  const { logout, user } = useContext(Authcntxt);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
@@ -534,6 +539,16 @@ export default function Chat() {
     }
   };
 
+  const handleLogout = async () => {
+    // Save role BEFORE logout clears user
+    const userRole = user?.role;
+
+    await logout();
+
+    // Navigate based on the saved role
+    navigate('/login');
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1038,39 +1053,90 @@ export default function Chat() {
             className="chat-actions-btn"
             onClick={() => setShowSearch(!showSearch)}
             title="Add Friend"
+            style={{
+              color: 'white',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              fontWeight: 'bold'
+            }}
           >
             +
           </button>
-          <div ref={settingsMenuRef} style={{ position: 'relative' }}>
+          <div ref={settingsMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
             <button
               className="chat-actions-btn"
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               title="Settings"
-              style={{ color: 'white' }}
+              style={{
+                color: 'white',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
               <Settings size={20} />
             </button>
 
             {showSettingsMenu && (
-              <div className="options-menu" style={{
+              <div style={{
                 position: 'absolute',
                 top: '100%',
                 right: 0,
                 marginTop: '0.5rem',
                 minWidth: '180px',
-                zIndex: 1000
+                background: '#2a2a2a',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                zIndex: 9999,
+                overflow: 'hidden'
               }}>
-                <button onClick={() => {
-                  setShowProfileModal(true);
-                  setShowSettingsMenu(false);
-                }}>
+                <button
+                  onClick={() => {
+                    setShowProfileModal(true);
+                    setShowSettingsMenu(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
                   👤 Edit Profile
                 </button>
-                <button onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}>
-                  🚪 Logout
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <LogOut size={18} />
+                  Logout
                 </button>
               </div>
             )}
