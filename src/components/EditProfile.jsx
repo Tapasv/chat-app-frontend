@@ -153,7 +153,7 @@ const EditProfile = () => {
             toast.success(res.data.message);
             setEmail("");
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to send verification email");
+            toast.error(err.response?.data?.message || "Failed to send verification email link");
         } finally {
             setLoading(false);
         }
