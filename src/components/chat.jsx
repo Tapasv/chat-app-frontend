@@ -6,7 +6,7 @@ import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic } from 'lucide-react'
+import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic, Play, Pause } from 'lucide-react';
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 import EmojiPicker from 'emoji-picker-react';
@@ -33,6 +33,12 @@ export default function Chat() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  // Voice message playback states
+  const [playingAudio, setPlayingAudio] = useState(null);
+  const [audioDurations, setAudioDurations] = useState({});
+  const [audioProgress, setAudioProgress] = useState({});
+  const audioRefs = useRef({});
+
   const { logout, user } = useContext(Authcntxt);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -57,12 +63,12 @@ export default function Chat() {
   const userVideoRef = useRef(null);
   const partnerVideoRef = useRef(null);
 
-  const [ShowChatMenu, setShowChatMenu] = useState(false)
-  const [blockedUser, setBlockedUser] = useState([])
-  const chatMenuRef = useRef(null)
+  const [ShowChatMenu, setShowChatMenu] = useState(false);
+  const [blockedUser, setBlockedUser] = useState([]);
+  const chatMenuRef = useRef(null);
 
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const settingsMenuRef = useRef(null)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const settingsMenuRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
@@ -133,10 +139,9 @@ export default function Chat() {
 
         if (!currentActive) return prev;
 
-        // Check if sender is blocked
         if (blockedUser.includes(data.sender._id)) {
           console.log("Message blocked from:", data.sender.Username);
-          return prev; // Don't add message from blocked user
+          return prev;
         }
 
         const isRelevant =
@@ -298,7 +303,7 @@ export default function Chat() {
         const res = await axios.get(`${SERVER_URL}/api/chat/blocked-users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setBlockedUser(res.data); // Array of blocked user IDs
+        setBlockedUser(res.data);
       } catch (err) {
         console.error("Failed to load blocked users:", err);
       }
@@ -307,7 +312,6 @@ export default function Chat() {
     loadBlockedUsers();
   }, []);
 
-  // useEffect to close settings menu when clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
@@ -485,7 +489,7 @@ export default function Chat() {
     if (!window.confirm(`Are you sure you want to clear this chat? This action cannot be undone.`)) return;
 
     try {
-      const token = localStorage.getItem("accessToken"); // Fixed typo: was "acessToken"
+      const token = localStorage.getItem("accessToken");
       await axios.delete(`${SERVER_URL}/api/chat/clear/${activeUser._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -499,7 +503,6 @@ export default function Chat() {
     }
   };
 
-  // useEffect to close chat menu when clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) {
@@ -580,7 +583,6 @@ export default function Chat() {
         setAudioBlob(audioBlob);
         await sendVoiceMessage(audioBlob);
 
-        // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -653,12 +655,8 @@ export default function Chat() {
   };
 
   const handleLogout = async () => {
-    // Save role BEFORE logout clears user
     const userRole = user?.role;
-
     await logout();
-
-    // Navigate based on the saved role
     navigate('/login');
   };
 
@@ -768,6 +766,60 @@ export default function Chat() {
     }
   };
 
+  // Voice message playback functions
+  const toggleAudioPlayback = (messageId, audioUrl) => {
+    if (playingAudio === messageId) {
+      // Pause the currently playing audio
+      const audio = audioRefs.current[messageId];
+      if (audio) {
+        audio.pause();
+      }
+      setPlayingAudio(null);
+    } else {
+      // Stop any currently playing audio
+      if (playingAudio && audioRefs.current[playingAudio]) {
+        audioRefs.current[playingAudio].pause();
+        audioRefs.current[playingAudio].currentTime = 0;
+      }
+
+      // Play the new audio
+      const audio = new Audio(`${SERVER_URL}${audioUrl}`);
+      audioRefs.current[messageId] = audio;
+
+      audio.addEventListener('loadedmetadata', () => {
+        setAudioDurations(prev => ({
+          ...prev,
+          [messageId]: audio.duration
+        }));
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        setAudioProgress(prev => ({
+          ...prev,
+          [messageId]: audio.currentTime
+        }));
+      });
+
+      audio.addEventListener('ended', () => {
+        setPlayingAudio(null);
+        setAudioProgress(prev => ({
+          ...prev,
+          [messageId]: 0
+        }));
+      });
+
+      audio.play();
+      setPlayingAudio(messageId);
+    }
+  };
+
+  const formatAudioTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const startCall = async (type) => {
     if (!activeUser) {
       toast.error("Please select a user to call");
@@ -820,7 +872,6 @@ export default function Chat() {
           partnerVideoRef.current.srcObject = event.streams[0];
           console.log("Stream assigned to video element");
 
-          // Check if video element is muted
           setTimeout(() => {
             console.log("Partner video element muted:", partnerVideoRef.current.muted);
             console.log("Partner video element volume:", partnerVideoRef.current.volume);
@@ -903,7 +954,6 @@ export default function Chat() {
           partnerVideoRef.current.srcObject = event.streams[0];
           console.log("Stream assigned to video element");
 
-          // Check if video element is muted
           setTimeout(() => {
             console.log("Partner video element muted:", partnerVideoRef.current.muted);
             console.log("Partner video element volume:", partnerVideoRef.current.volume);
@@ -992,6 +1042,7 @@ export default function Chat() {
   const renderMessage = (msg) => {
     const isFile = msg.fileUrl;
     const isImage = isFile && msg.fileType?.startsWith('image/');
+    const isVoice = msg.isVoiceMessage || (msg.fileType && (msg.fileType.includes('audio') || msg.fileName?.includes('voice-')));
     const isCurrentUser = msg.sender?.Username === currentUser?.Username;
 
     return (
@@ -1012,6 +1063,56 @@ export default function Chat() {
                   onClick={() => window.open(`${SERVER_URL}${msg.fileUrl}`, '_blank')}
                 />
               </div>
+            ) : isVoice ? (
+              <div className="voice-message" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.5rem',
+                minWidth: '200px'
+              }}>
+                <button
+                  onClick={() => toggleAudioPlayback(msg._id, msg.fileUrl)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: 'white'
+                  }}
+                >
+                  {playingAudio === msg._id ? <Pause size={18} /> : <Play size={18} />}
+                </button>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    height: '4px',
+                    background: 'rgba(255,255,255,0.3)',
+                    borderRadius: '2px',
+                    overflow: 'hidden',
+                    marginBottom: '0.25rem'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      background: 'white',
+                      width: `${audioDurations[msg._id] ? (audioProgress[msg._id] / audioDurations[msg._id]) * 100 : 0}%`,
+                      transition: 'width 0.1s linear'
+                    }}></div>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
+                    {playingAudio === msg._id 
+                      ? formatAudioTime(audioProgress[msg._id]) 
+                      : formatAudioTime(audioDurations[msg._id] || 0)}
+                  </div>
+                </div>
+
+                <Mic size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
+              </div>
             ) : (
               <div className="file-info">
                 <div className="file-icon">📄</div>
@@ -1019,14 +1120,14 @@ export default function Chat() {
                   <div className="file-name">{msg.fileName}</div>
                   <div className="file-size">{formatFileSize(msg.fileSize)}</div>
                 </div>
+                <button
+                  className="download-btn"
+                  onClick={() => window.open(`${SERVER_URL}${msg.fileUrl}`, '_blank')}
+                >
+                  Download
+                </button>
               </div>
             )}
-            <button
-              className="download-btn"
-              onClick={() => window.open(`${SERVER_URL}${msg.fileUrl}`, '_blank')}
-            >
-              Download
-            </button>
           </div>
         ) : (
           <p className="message-text">{msg.text}</p>
@@ -1066,88 +1167,6 @@ export default function Chat() {
           </div>
         </div>
       ))}
-
-      {/* {showProfileModal && (
-        <div className="profile-upload-modal" onClick={() => setShowProfileModal(false)}>
-          <div className="profile-upload-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Upload Profile Picture</h2>
-            <div className="profile-upload-preview">
-              {profilePreview || currentUser?.profilePicture ? (
-                <img src={profilePreview || `${SERVER_URL}${currentUser.profilePicture}`} alt="Profile" />
-              ) : (
-                <span style={{ fontSize: '3rem' }}>{currentUser?.Username?.[0] || 'U'}</span>
-              )}
-            </div>
-            <input
-              type="file"
-              ref={profileInputRef}
-              onChange={handleProfilePictureUpload}
-              style={{ display: 'none' }}
-              accept="image/*"
-            />
-            <button onClick={triggerProfileUpload}>Choose Picture</button>
-            <button onClick={() => setShowProfileModal(false)} style={{ marginLeft: '1rem', background: 'rgba(255,255,255,0.1)' }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )} */}
-
-      {/* {incomingCall && !callAccepted && (
-        <div className="call-modal">
-          <div className="call-content">
-            <div className="call-avatar">
-              {incomingCall.profilePicture ? (
-                <img src={`${SERVER_URL}${incomingCall.profilePicture}`} alt={incomingCall.Username} />
-              ) : (
-                incomingCall.Username[0]
-              )}
-            </div>
-            <h2>{incomingCall.Username}</h2>
-            <p className="call-status">Incoming {callType} call...</p>
-            <div className="call-actions">
-              <button className="call-btn accept" onClick={answerCall}>
-                📞
-              </button>
-              <button className="call-btn reject" onClick={rejectCall}>
-                ❌
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
-
-      {/* {(stream || callAccepted) && (
-        <div className="call-modal">
-          <div className="call-content" style={{ maxWidth: '900px' }}>
-            <h2>{activeUser?.Username || incomingCall?.Username}</h2>
-            <p className="call-status">{callAccepted ? 'Connected' : 'Calling...'}</p>
-
-            {callType === 'video' && (
-              <div className="video-container">
-                <video ref={partnerVideoRef} autoPlay playsInline className="remote-video" />
-                <video ref={userVideoRef} autoPlay playsInline muted className="local-video" />
-              </div>
-            )}
-
-            {callType === 'voice' && (
-              <div className="call-avatar" style={{ margin: '2rem auto' }}>
-                {activeUser?.profilePicture || incomingCall?.profilePicture ? (
-                  <img src={`${SERVER_URL}${activeUser?.profilePicture || incomingCall?.profilePicture}`} alt="User" />
-                ) : (
-                  (activeUser?.Username || incomingCall?.Username)?.[0]
-                )}
-              </div>
-            )}
-
-            <div className="call-actions" style={{ marginTop: '2rem' }}>
-              <button className="call-btn reject" onClick={endCall}>
-                ❌ End Call
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       <div className={`sidebar ${!showUserList ? 'hidden' : ''}`}>
         <div className="sidebar-header">
@@ -1241,7 +1260,6 @@ export default function Chat() {
                   Edit Profile
                 </button>
 
-                {/* Add Admin Panel button - only show if user is Admin */}
                 {currentUser?.role === 'Admin' && (
                   <button
                     onClick={() => {
@@ -1417,21 +1435,7 @@ export default function Chat() {
                     )}
                   </div>
                   <div className="user-info">
-                    <h4 className="user-name">
-                      {friend.Username}
-                      {/* {blockedUser.includes(friend._id) && (
-                        <span style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.65rem',
-                          padding: '0.15rem 0.4rem',
-                          background: 'var(--danger)',
-                          borderRadius: '3px',
-                          fontWeight: '500'
-                        }}>
-                          Blocked
-                        </span>
-                      )} */}
-                    </h4>
+                    <h4 className="user-name">{friend.Username}</h4>
                     <p className="user-status">
                       {blockedUser.includes(friend._id)
                         ? "Blocked"
@@ -1677,6 +1681,17 @@ export default function Chat() {
                             skinTonesDisabled
                             previewConfig={{ showPreview: false }}
                             lazyLoadEmojis={true}
+                            categories={[
+                              { category: 'suggested', name: 'Recently Used' },
+                              { category: 'smileys_people', name: 'Smileys & People' },
+                              { category: 'animals_nature', name: 'Animals & Nature' },
+                              { category: 'food_drink', name: 'Food & Drink' },
+                              { category: 'travel_places', name: 'Travel & Places' },
+                              { category: 'activities', name: 'Activities' },
+                              { category: 'objects', name: 'Objects' },
+                              { category: 'symbols', name: 'Symbols' },
+                              { category: 'flags', name: 'Flags' }
+                            ]}
                           />
                         </div>
                       )}
@@ -1719,8 +1734,6 @@ export default function Chat() {
           </>
         )}
       </div>
-
-      <ToastContainer />
     </div>
   );
 }
