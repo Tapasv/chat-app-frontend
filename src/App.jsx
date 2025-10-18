@@ -7,6 +7,8 @@ import Navbar from "./components/Navbar"
 import Chat from "./components/chat"
 import ForgotPassword from "./components/ForgotPassword"
 import ResetPassword from "./components/ResetPassword"
+import EditProfile from "./components/EditProfile"
+import VerifyEmail from "./components/VerifyEmail"
 import { Authprovider, Authcntxt } from "./context/authcontext"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
@@ -52,6 +54,8 @@ function AppContent() {
         <Route path="/admin" element={<Adminpanel />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
       </Routes>
 
       <ToastContainer

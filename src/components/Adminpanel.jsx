@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { apiadmin } from "../apiadmin";
 import { ToastContainer, toast } from "react-toastify";
 import { useContext } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { useNavigate } from "react-router-dom";
 import { Authcntxt } from "../context/authcontext";
-import { LogOut } from "lucide-react";
-import Chat from "./chat";
+import { LogOut, MessageCircle } from "lucide-react";
 import 'react-toastify/dist/ReactToastify.css';
 
 const Adminpanel = () => {
@@ -57,25 +55,46 @@ const Adminpanel = () => {
     <div className="Admin-div">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h1 style={{ margin: 0 }}>⚙️ User Management</h1>
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'linear-gradient(135deg, #dc3545, #a02834)',
-            padding: '0.6rem 1.2rem',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            border: 'none',
-            borderRadius: '8px',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => navigate('/chat')}
+            style={{
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+              padding: '0.6rem 1.2rem',
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            <MessageCircle size={18} />
+            Chat
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'linear-gradient(135deg, #dc3545, #a02834)',
+              padding: '0.6rem 1.2rem',
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </div>
       </div>
       <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
         Total Users: <strong style={{ color: 'var(--primary)' }}>{user.length}</strong>
@@ -137,13 +156,7 @@ const Adminpanel = () => {
         </table>
       )}
       <ToastContainer />
-
-      <Routes>
-        <Route path="/chat" element={<Chat />} />
-      </Routes>
     </div>
-
-
   );
 };
 

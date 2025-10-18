@@ -6,7 +6,7 @@ import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut, MessageCircle  } from 'lucide-react'
+import { MoreVertical, UserX, Trash2, Settings, LogOut, User } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -1102,7 +1102,7 @@ export default function Chat() {
               }}>
                 <button
                   onClick={() => {
-                    setShowProfileModal(true);
+                    navigate('/edit-profile');
                     setShowSettingsMenu(false);
                   }}
                   style={{
@@ -1118,8 +1118,35 @@ export default function Chat() {
                     gap: '0.5rem'
                   }}
                 >
-                  👤 Edit Profile
+                  <User size={18} />
+                  Edit Profile
                 </button>
+
+                {/* Add Admin Panel button - only show if user is Admin */}
+                {currentUser?.role === 'Admin' && (
+                  <button
+                    onClick={() => {
+                      navigate('/admin');
+                      setShowSettingsMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'white',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <Settings size={18} />
+                    Admin Panel
+                  </button>
+                )}
+
                 <button
                   onClick={handleLogout}
                   style={{

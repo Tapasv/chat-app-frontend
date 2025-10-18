@@ -19,10 +19,23 @@ export const Authprovider = ({ children }) => {
             return false;
         }
 
+        // Add timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+            console.error("Token validation timeout");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            localStorage.removeItem("refreshToken");
+            setuser(null);
+            setaccessToken(null);
+            setIsLoading(false);
+        }, 10000); // 10 second timeout
+
         try {
-            const response = await axios.get(`${SERVER_URL}/api/auth/validate`, {
+            const response = await axios.get(`${SERVER_URL}/auth/validate`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            
+            clearTimeout(timeoutId);
             
             if (response.data.valid) {
                 setuser(JSON.parse(savedUser));
@@ -30,7 +43,6 @@ export const Authprovider = ({ children }) => {
                 setIsLoading(false);
                 return true;
             } else {
-                // Token validation returned false - clear everything
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("user");
                 localStorage.removeItem("refreshToken");
@@ -40,7 +52,7 @@ export const Authprovider = ({ children }) => {
                 return false;
             }
         } catch (error) {
-            // Token is invalid or expired - clear everything
+            clearTimeout(timeoutId);
             console.log("Token validation failed:", error.message);
             localStorage.removeItem("accessToken");
             localStorage.removeItem("user");
@@ -68,7 +80,7 @@ export const Authprovider = ({ children }) => {
         try {
             const refreshToken = localStorage.getItem("refreshToken");
             if (refreshToken) {
-                await axios.post(`${SERVER_URL}/api/auth/logout`, { refreshToken });
+                await axios.post(`${SERVER_URL}/auth/logout`, { refreshToken });
             }
         } catch (error) {
             console.error("Logout error:", error);

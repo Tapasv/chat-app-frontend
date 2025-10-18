@@ -94,7 +94,6 @@ const Login = () => {
                     {isSubmitting ? "Logging In" : "Login"}
                 </button>
             </form>
-            <ToastContainer />
         </div>
     );
 };
