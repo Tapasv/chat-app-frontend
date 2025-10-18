@@ -6,7 +6,7 @@ import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut, User } from 'lucide-react'
+import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 import EmojiPicker from 'emoji-picker-react';
@@ -28,6 +28,10 @@ export default function Chat() {
   const [searchResults, setSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   const { logout, user } = useContext(Authcntxt);
 
@@ -556,6 +560,96 @@ export default function Chat() {
 
   const handleEmojiClick = (emojiObject) => {
     setMessage(prevMessage => prevMessage + emojiObject.emoji);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        await sendVoiceMessage(audioBlob);
+
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.info('Recording... Click again to send');
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      toast.error('Could not access microphone');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const sendVoiceMessage = async (audioBlob) => {
+    if (!activeUser || !audioBlob) return;
+
+    const formData = new FormData();
+    formData.append('file', audioBlob, `voice-${Date.now()}.webm`);
+    formData.append('receiver', activeUser._id);
+    formData.append('isVoiceMessage', 'true');
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const progress = (e.loaded / e.total) * 100;
+        setUploadProgress(Math.round(progress));
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        toast.success('Voice message sent!');
+        setAudioBlob(null);
+      } else {
+        toast.error('Failed to send voice message');
+      }
+
+      setIsUploading(false);
+      setUploadProgress(0);
+    });
+
+    xhr.addEventListener('error', () => {
+      toast.error('Failed to send voice message');
+      setIsUploading(false);
+      setUploadProgress(0);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    xhr.open('POST', `${SERVER_URL}/api/chat/upload`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.send(formData);
+  };
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   const handleLogout = async () => {
@@ -1579,9 +1673,10 @@ export default function Chat() {
                             width={350}
                             height={400}
                             theme="dark"
-                            searchDisabled={false}
-                            skinTonesDisabled={false}
+                            searchDisabled
+                            skinTonesDisabled
                             previewConfig={{ showPreview: false }}
+                            lazyLoadEmojis={true}
                           />
                         </div>
                       )}
@@ -1596,7 +1691,19 @@ export default function Chat() {
                         ➤
                       </button>
                     ) : (
-                      <button className="input-action-btn">🎤</button>
+                      <button
+                        className="input-action-btn"
+                        onClick={handleMicClick}
+                        disabled={isUploading}
+                        style={{
+                          background: isRecording ? 'var(--danger)' : 'transparent',
+                          animation: isRecording ? 'pulse 1s infinite' : 'none',
+                          color: isRecording ? 'white' : 'var(--text-primary)'
+                        }}
+                        title={isRecording ? "Click to send" : "Record voice message"}
+                      >
+                        <Mic size={20} />
+                      </button>
                     )}
                   </div>
                 </>
