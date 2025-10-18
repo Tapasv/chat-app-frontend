@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { MoreVertical, UserX, Trash2, Settings, LogOut, User } from 'lucide-react'
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
+import EmojiPicker from 'emoji-picker-react';
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Chat() {
@@ -29,6 +30,9 @@ export default function Chat() {
   const [sentRequests, setSentRequests] = useState([]);
 
   const { logout, user } = useContext(Authcntxt);
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
@@ -311,6 +315,17 @@ export default function Chat() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const searchUsers = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -537,6 +552,10 @@ export default function Chat() {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleEmojiClick = (emojiObject) => {
+    setMessage(prevMessage => prevMessage + emojiObject.emoji);
   };
 
   const handleLogout = async () => {
@@ -1193,7 +1212,13 @@ export default function Chat() {
                   <div key={user._id} className="search-result-item">
                     <div className="user-avatar">
                       {user.profilePicture ? (
-                        <img src={`${SERVER_URL}${user.profilePicture}`} alt={user.Username} />
+                        <img
+                          src={user.profilePicture.startsWith('http')
+                            ? user.profilePicture
+                            : `${SERVER_URL}${user.profilePicture}`
+                          }
+                          alt={user.Username}
+                        />
                       ) : (
                         user.Username[0]
                       )}
@@ -1225,7 +1250,13 @@ export default function Chat() {
               <div key={req._id} className="request-item">
                 <div className="user-avatar">
                   {req.sender.profilePicture ? (
-                    <img src={`${SERVER_URL}${req.sender.profilePicture}`} alt={req.sender.Username} />
+                    <img
+                      src={req.sender.profilePicture.startsWith('http')
+                        ? req.sender.profilePicture
+                        : `${SERVER_URL}${req.sender.profilePicture}`
+                      }
+                      alt={req.sender.Username}
+                    />
                   ) : (
                     req.sender.Username[0]
                   )}
@@ -1277,7 +1308,13 @@ export default function Chat() {
                 >
                   <div className="user-avatar">
                     {friend.profilePicture ? (
-                      <img src={`${SERVER_URL}${friend.profilePicture}`} alt={friend.Username} />
+                      <img
+                        src={friend.profilePicture.startsWith('http')
+                          ? friend.profilePicture
+                          : `${SERVER_URL}${friend.profilePicture}`
+                        }
+                        alt={friend.Username}
+                      />
                     ) : (
                       friend.Username[0]
                     )}
@@ -1520,7 +1557,35 @@ export default function Chat() {
                       disabled={isUploading}
                     />
 
-                    <button className="input-action-btn">😊</button>
+                    <div ref={emojiPickerRef} style={{ position: 'relative' }}>
+                      <button
+                        className="input-action-btn"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        type="button"
+                      >
+                        😊
+                      </button>
+
+                      {showEmojiPicker && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '100%',
+                          right: 0,
+                          marginBottom: '0.5rem',
+                          zIndex: 1000
+                        }}>
+                          <EmojiPicker
+                            onEmojiClick={handleEmojiClick}
+                            width={350}
+                            height={400}
+                            theme="dark"
+                            searchDisabled={false}
+                            skinTonesDisabled={false}
+                            previewConfig={{ showPreview: false }}
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {message.trim() ? (
                       <button
