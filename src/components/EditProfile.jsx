@@ -11,22 +11,22 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 const EditProfile = () => {
     const navigate = useNavigate();
     const { user: contextUser, login } = useContext(Authcntxt);
-    
+
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
-    
+
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordVerified, setPasswordVerified] = useState(false);
-    
+
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    
+
     const [profilePreview, setProfilePreview] = useState(null);
     const profileInputRef = useRef(null);
-    
+
     const [loading, setLoading] = useState(false);
     const [verifyingPassword, setVerifyingPassword] = useState(false);
 
@@ -45,15 +45,15 @@ const EditProfile = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.put(`${SERVER_URL}/api/profile/update-username`, 
+            const res = await axios.put(`${SERVER_URL}/api/profile/update-username`,
                 { Username: username },
-                { headers: { Authorization: `Bearer ${token}` }}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             const updatedUser = { ...contextUser, Username: username };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             login(updatedUser, token, localStorage.getItem("refreshToken"));
-            
+
             toast.success(res.data.message);
             setUsername("");
         } catch (err) {
@@ -74,9 +74,9 @@ const EditProfile = () => {
             const token = localStorage.getItem("accessToken");
             await axios.post(`${SERVER_URL}/api/profile/verify-password`,
                 { currentPassword },
-                { headers: { Authorization: `Bearer ${token}` }}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             setPasswordVerified(true);
             toast.success("Password verified! You can now set a new password");
         } catch (err) {
@@ -108,9 +108,9 @@ const EditProfile = () => {
             const token = localStorage.getItem("accessToken");
             const res = await axios.put(`${SERVER_URL}/api/profile/update-password`,
                 { currentPassword, newPassword },
-                { headers: { Authorization: `Bearer ${token}` }}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             toast.success(res.data.message);
             setCurrentPassword("");
             setNewPassword("");
@@ -147,9 +147,9 @@ const EditProfile = () => {
             const token = localStorage.getItem("accessToken");
             const res = await axios.post(`${SERVER_URL}/api/profile/request-email-change`,
                 { newEmail: email },
-                { headers: { Authorization: `Bearer ${token}` }}
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             toast.success(res.data.message);
             setEmail("");
         } catch (err) {
@@ -197,7 +197,7 @@ const EditProfile = () => {
             const updatedUser = { ...contextUser, profilePicture: res.data.profilePicture };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             login(updatedUser, localStorage.getItem("accessToken"), localStorage.getItem("refreshToken"));
-            
+
             setProfilePreview(null);
         } catch (err) {
             console.error('Upload error:', err);
@@ -221,7 +221,7 @@ const EditProfile = () => {
     return (
         <div className="Login-div">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <button 
+                <button
                     onClick={() => navigate('/chat')}
                     style={{
                         background: 'transparent',
@@ -243,11 +243,11 @@ const EditProfile = () => {
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Camera size={20} /> Profile Picture
                 </h3>
-                
-                <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
+
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     gap: '1rem',
                     padding: '1rem',
                     background: 'rgba(255,255,255,0.05)',
@@ -267,16 +267,16 @@ const EditProfile = () => {
                         color: 'white'
                     }}>
                         {getCurrentProfilePicture() ? (
-                            <img 
-                                src={getCurrentProfilePicture()} 
-                                alt="Profile" 
+                            <img
+                                src={getCurrentProfilePicture()}
+                                alt="Profile"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         ) : (
                             contextUser?.Username?.[0]?.toUpperCase() || 'U'
                         )}
                     </div>
-                    
+
                     <input
                         type="file"
                         ref={profileInputRef}
@@ -284,8 +284,8 @@ const EditProfile = () => {
                         style={{ display: 'none' }}
                         accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     />
-                    
-                    <button 
+
+                    <button
                         onClick={() => profileInputRef.current?.click()}
                         disabled={loading}
                         style={{ width: 'auto' }}
@@ -350,7 +350,7 @@ const EditProfile = () => {
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Lock size={20} /> Change Password
                 </h3>
-                
+
                 <label>
                     <b>Current Password:</b>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -363,6 +363,7 @@ const EditProfile = () => {
                                     setPasswordVerified(false);
                                 }}
                                 placeholder="Enter current password"
+                                autoComplete="new-password"
                                 style={{ width: '100%', paddingRight: '2.5rem', marginBottom: 0 }}
                             />
                             <button
@@ -389,7 +390,7 @@ const EditProfile = () => {
                                 {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
-                        <button 
+                        <button
                             onClick={handleVerifyPassword}
                             disabled={verifyingPassword || !currentPassword}
                             style={{
@@ -414,6 +415,7 @@ const EditProfile = () => {
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="Enter new password (min 6 characters)"
                             disabled={!passwordVerified}
+                            autoComplete="new-password"
                             style={{
                                 width: '100%',
                                 paddingRight: '2.5rem',
@@ -458,6 +460,7 @@ const EditProfile = () => {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Confirm new password"
                             disabled={!passwordVerified}
+                            autoComplete="new-password"
                             style={{
                                 width: '100%',
                                 paddingRight: '2.5rem',
@@ -493,8 +496,8 @@ const EditProfile = () => {
                     </div>
                 </label>
 
-                <button 
-                    onClick={handleUpdatePassword} 
+                <button
+                    onClick={handleUpdatePassword}
                     disabled={loading || !passwordVerified}
                     style={{
                         opacity: passwordVerified ? 1 : 0.5,
@@ -507,7 +510,7 @@ const EditProfile = () => {
 
             <hr style={{ margin: '2rem 0', border: '1px solid rgba(255,255,255,0.1)' }} />
 
-            <button 
+            <button
                 onClick={() => navigate('/chat')}
                 style={{
                     background: 'rgba(255, 255, 255, 0.1)',

@@ -1038,9 +1038,15 @@ export default function Chat() {
 
       <div className={`sidebar ${!showUserList ? 'hidden' : ''}`}>
         <div className="sidebar-header">
-          <div className="profile-pic" onClick={() => setShowProfileModal(true)}>
+          <div className="profile-pic" onClick={() => navigate('/edit-profile')}>
             {currentUser?.profilePicture ? (
-              <img src={`${SERVER_URL}${currentUser.profilePicture}`} alt={currentUser.Username} />
+              <img
+                src={currentUser.profilePicture.startsWith('http')
+                  ? currentUser.profilePicture
+                  : `${SERVER_URL}${currentUser.profilePicture}`
+                }
+                alt={currentUser.Username}
+              />
             ) : (
               currentUser?.Username?.[0] || 'U'
             )}
@@ -1351,7 +1357,13 @@ export default function Chat() {
 
               <div className="profile-pic">
                 {activeUser.profilePicture ? (
-                  <img src={`${SERVER_URL}${activeUser.profilePicture}`} alt={activeUser.Username} />
+                  <img
+                    src={activeUser.profilePicture.startsWith('http')
+                      ? activeUser.profilePicture
+                      : `${SERVER_URL}${activeUser.profilePicture}`
+                    }
+                    alt={activeUser.Username}
+                  />
                 ) : (
                   activeUser.Username[0]
                 )}
