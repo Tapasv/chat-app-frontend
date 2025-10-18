@@ -38,6 +38,8 @@ export default function Chat() {
   const [audioDurations, setAudioDurations] = useState({});
   const [audioProgress, setAudioProgress] = useState({});
   const audioRefs = useRef({});
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingIntervalRef = useRef(null);
 
   const { logout, user } = useContext(Authcntxt);
 
@@ -584,10 +586,24 @@ export default function Chat() {
         await sendVoiceMessage(audioBlob);
 
         stream.getTracks().forEach(track => track.stop());
+
+        // Clear the recording timer
+        if (recordingIntervalRef.current) {
+          clearInterval(recordingIntervalRef.current);
+          recordingIntervalRef.current = null;
+        }
+        setRecordingDuration(0);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start the timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
       toast.info('Recording... Click again to send');
     } catch (err) {
       console.error('Error accessing microphone:', err);
@@ -599,6 +615,12 @@ export default function Chat() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+
+      // Clear the recording timer
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
     }
   };
 
@@ -817,6 +839,12 @@ export default function Chat() {
     if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -1039,7 +1067,7 @@ export default function Chat() {
     });
   };
 
-  
+
 
   const renderMessage = (msg) => {
     const isFile = msg.fileUrl;
@@ -1090,7 +1118,7 @@ export default function Chat() {
                 >
                   {playingAudio === msg._id ? <Pause size={18} /> : <Play size={18} />}
                 </button>
-                
+
                 <div style={{ flex: 1 }}>
                   <div style={{
                     height: '4px',
@@ -1107,8 +1135,8 @@ export default function Chat() {
                     }}></div>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
-                    {playingAudio === msg._id 
-                      ? formatAudioTime(audioProgress[msg._id]) 
+                    {playingAudio === msg._id
+                      ? formatAudioTime(audioProgress[msg._id])
                       : formatAudioTime(audioDurations[msg._id] || 0)}
                   </div>
                 </div>
@@ -1630,6 +1658,46 @@ export default function Chat() {
                 </div>
               ) : (
                 <>
+                  {/* Recording Indicator */}
+                  {isRecording && (
+                    <div style={{
+                      padding: '1rem',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      borderRadius: '8px',
+                      margin: '0 1rem 0.5rem 1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      animation: 'pulse 1.5s ease-in-out infinite'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: 'var(--danger)',
+                        fontWeight: '500'
+                      }}>
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          background: 'var(--danger)',
+                          animation: 'blink 1s ease-in-out infinite'
+                        }}></div>
+                        Recording...
+                      </div>
+                      <div style={{
+                        marginLeft: 'auto',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        color: 'var(--danger)',
+                        fontFamily: 'monospace'
+                      }}>
+                        {formatRecordingTime(recordingDuration)}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="message-input-container">
                     <input
                       type="file"
@@ -1641,7 +1709,7 @@ export default function Chat() {
                     <button
                       className="input-action-btn"
                       onClick={triggerFileUpload}
-                      disabled={isUploading}
+                      disabled={isUploading || isRecording}
                       title="Upload file"
                     >
                       {isUploading ? '⏳' : '📎'}
@@ -1649,12 +1717,12 @@ export default function Chat() {
 
                     <input
                       type="text"
-                      placeholder={isUploading ? "Uploading file..." : "Type a message"}
+                      placeholder={isRecording ? "Recording voice message..." : isUploading ? "Uploading file..." : "Type a message"}
                       value={message}
                       onChange={handleInput}
                       onKeyPress={handleKeyPress}
                       className="message-input"
-                      disabled={isUploading}
+                      disabled={isUploading || isRecording}
                     />
 
                     <div ref={emojiPickerRef} style={{ position: 'relative' }}>
@@ -1662,6 +1730,7 @@ export default function Chat() {
                         className="input-action-btn"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         type="button"
+                        disabled={isRecording}
                       >
                         😊
                       </button>
@@ -1691,7 +1760,7 @@ export default function Chat() {
                       <button
                         onClick={sendMessage}
                         className="send-btn"
-                        disabled={isUploading}
+                        disabled={isUploading || isRecording}
                       >
                         ➤
                       </button>
@@ -1702,7 +1771,6 @@ export default function Chat() {
                         disabled={isUploading}
                         style={{
                           background: isRecording ? 'var(--danger)' : 'transparent',
-                          animation: isRecording ? 'pulse 1s infinite' : 'none',
                           color: isRecording ? 'white' : 'var(--text-primary)'
                         }}
                         title={isRecording ? "Click to send" : "Record voice message"}
