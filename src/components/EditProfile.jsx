@@ -12,7 +12,6 @@ const EditProfile = () => {
     const navigate = useNavigate();
     const { user: contextUser, login } = useContext(Authcntxt);
     
-    // All fields start EMPTY
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     
@@ -21,12 +20,10 @@ const EditProfile = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordVerified, setPasswordVerified] = useState(false);
     
-    // Password visibility states
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     
-    // Profile picture
     const [profilePreview, setProfilePreview] = useState(null);
     const profileInputRef = useRef(null);
     
@@ -36,9 +33,7 @@ const EditProfile = () => {
     useEffect(() => {
         if (!contextUser) {
             navigate('/login');
-            return;
         }
-        // Don't load values - keep fields empty
     }, [contextUser, navigate]);
 
     const handleUpdateUsername = async () => {
@@ -134,6 +129,19 @@ const EditProfile = () => {
             return;
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+
+        const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+        const emailDomain = email.toLowerCase().split('@')[1];
+        if (!allowedDomains.includes(emailDomain)) {
+            toast.error('Please use Gmail, Yahoo, or Outlook email');
+            return;
+        }
+
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
@@ -160,14 +168,18 @@ const EditProfile = () => {
             return;
         }
 
-        // Preview
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            toast.error('Please upload a valid image file (JPG, PNG, GIF, or WebP)');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onloadend = () => {
             setProfilePreview(reader.result);
         };
         reader.readAsDataURL(file);
 
-        // Upload
         const formData = new FormData();
         formData.append('profilePicture', file);
 
@@ -188,11 +200,22 @@ const EditProfile = () => {
             
             setProfilePreview(null);
         } catch (err) {
-            console.error(err);
+            console.error('Upload error:', err);
             toast.error(err.response?.data?.message || 'Failed to upload profile picture');
         } finally {
             setLoading(false);
         }
+    };
+
+    const getCurrentProfilePicture = () => {
+        if (profilePreview) return profilePreview;
+        if (contextUser?.profilePicture) {
+            if (contextUser.profilePicture.startsWith('http')) {
+                return contextUser.profilePicture;
+            }
+            return `${SERVER_URL}${contextUser.profilePicture}`;
+        }
+        return null;
     };
 
     return (
@@ -206,7 +229,9 @@ const EditProfile = () => {
                         color: 'white',
                         cursor: 'pointer',
                         display: 'flex',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        padding: '0.5rem',
+                        boxShadow: 'none'
                     }}
                 >
                     <ArrowLeft size={24} />
@@ -214,7 +239,6 @@ const EditProfile = () => {
                 <h1 style={{ margin: 0 }}>Edit Profile</h1>
             </div>
 
-            {/* Profile Picture Section - MOVED TO TOP */}
             <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Camera size={20} /> Profile Picture
@@ -234,20 +258,22 @@ const EditProfile = () => {
                         height: '150px',
                         borderRadius: '50%',
                         overflow: 'hidden',
-                        background: 'rgba(255,255,255,0.1)',
+                        background: 'linear-gradient(135deg, var(--primary), #60a5fa)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '3rem'
+                        fontSize: '3rem',
+                        fontWeight: '600',
+                        color: 'white'
                     }}>
-                        {profilePreview || contextUser?.profilePicture ? (
+                        {getCurrentProfilePicture() ? (
                             <img 
-                                src={profilePreview || contextUser.profilePicture} 
+                                src={getCurrentProfilePicture()} 
                                 alt="Profile" 
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         ) : (
-                            contextUser?.Username?.[0] || 'U'
+                            contextUser?.Username?.[0]?.toUpperCase() || 'U'
                         )}
                     </div>
                     
@@ -256,7 +282,7 @@ const EditProfile = () => {
                         ref={profileInputRef}
                         onChange={handleProfilePictureUpload}
                         style={{ display: 'none' }}
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     />
                     
                     <button 
@@ -271,11 +297,13 @@ const EditProfile = () => {
 
             <hr style={{ margin: '2rem 0', border: '1px solid rgba(255,255,255,0.1)' }} />
 
-            {/* Username Section */}
             <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <User size={20} /> Update Username
                 </h3>
+                <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '1rem' }}>
+                    Current: <strong>{contextUser?.Username}</strong>
+                </p>
                 <label>
                     <b>New Username:</b>
                     <input
@@ -292,11 +320,13 @@ const EditProfile = () => {
 
             <hr style={{ margin: '2rem 0', border: '1px solid rgba(255,255,255,0.1)' }} />
 
-            {/* Email Section */}
             <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Mail size={20} /> Change Email
                 </h3>
+                <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '1rem' }}>
+                    Current: <strong>{contextUser?.Email}</strong>
+                </p>
                 <label>
                     <b>New Email:</b>
                     <input
@@ -316,7 +346,6 @@ const EditProfile = () => {
 
             <hr style={{ margin: '2rem 0', border: '1px solid rgba(255,255,255,0.1)' }} />
 
-            {/* Password Section */}
             <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Lock size={20} /> Change Password
@@ -324,7 +353,7 @@ const EditProfile = () => {
                 
                 <label>
                     <b>Current Password:</b>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <div style={{ position: 'relative', flex: 1 }}>
                             <input
                                 type={showCurrentPassword ? "text" : "password"}
@@ -334,24 +363,27 @@ const EditProfile = () => {
                                     setPasswordVerified(false);
                                 }}
                                 placeholder="Enter current password"
-                                style={{ width: '100%', paddingRight: '2.5rem' }}
+                                style={{ width: '100%', paddingRight: '2.5rem', marginBottom: 0 }}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: '0.75rem',
+                                    right: '0.5rem',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'transparent',
                                     border: 'none',
                                     color: '#aaa',
                                     cursor: 'pointer',
-                                    padding: '0',
+                                    padding: '0.5rem',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    height: 'auto'
+                                    justifyContent: 'center',
+                                    height: 'auto',
+                                    boxShadow: 'none',
+                                    minWidth: 'auto'
                                 }}
                             >
                                 {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -364,7 +396,8 @@ const EditProfile = () => {
                                 padding: '0.75rem 1rem',
                                 background: passwordVerified ? '#10b981' : 'var(--primary)',
                                 minWidth: '90px',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                marginBottom: 0
                             }}
                         >
                             {passwordVerified ? <Check size={18} /> : 'Verify'}
@@ -379,7 +412,7 @@ const EditProfile = () => {
                             type={showNewPassword ? "text" : "password"}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Enter new password"
+                            placeholder="Enter new password (min 6 characters)"
                             disabled={!passwordVerified}
                             style={{
                                 width: '100%',
@@ -394,17 +427,20 @@ const EditProfile = () => {
                                 onClick={() => setShowNewPassword(!showNewPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: '0.75rem',
+                                    right: '0.5rem',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'transparent',
                                     border: 'none',
                                     color: '#aaa',
                                     cursor: 'pointer',
-                                    padding: '0',
+                                    padding: '0.5rem',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    height: 'auto'
+                                    justifyContent: 'center',
+                                    height: 'auto',
+                                    boxShadow: 'none',
+                                    minWidth: 'auto'
                                 }}
                             >
                                 {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -435,17 +471,20 @@ const EditProfile = () => {
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: '0.75rem',
+                                    right: '0.5rem',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'transparent',
                                     border: 'none',
                                     color: '#aaa',
                                     cursor: 'pointer',
-                                    padding: '0',
+                                    padding: '0.5rem',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    height: 'auto'
+                                    justifyContent: 'center',
+                                    height: 'auto',
+                                    boxShadow: 'none',
+                                    minWidth: 'auto'
                                 }}
                             >
                                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
