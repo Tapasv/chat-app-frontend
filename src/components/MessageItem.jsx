@@ -11,12 +11,12 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const [showOptions, setShowOptions] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteType, setDeleteType] = useState(null);
-    
+
     // Voice message states
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
-    
+
     const optionsRef = useRef(null);
     const audioRef = useRef(null);
 
@@ -103,7 +103,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const togglePlayback = () => {
         if (!audioRef.current) {
             audioRef.current = new Audio(`${SERVER_URL}${message.fileUrl}`);
-            
+
             audioRef.current.addEventListener('loadedmetadata', () => {
                 setDuration(audioRef.current.duration);
             });
@@ -167,7 +167,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             <div className="message-wrapper">
                 {/* Three-dot menu */}
                 <div className="message-options" ref={optionsRef}>
-                    <button 
+                    <button
                         className="options-btn"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -188,17 +188,17 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                     ✏️ Edit
                                 </button>
                             )}
-                            
+
                             {isCurrentUser && (
                                 <button onClick={() => {
                                     setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
                                     setShowOptions(false);
                                 }}>
-                                Delete for Everyone
+                                    Delete for Everyone
                                 </button>
                             )}
-                            
+
                             {/* FOR EVERYONE: Show Delete for Me */}
                             <button className='dlt-msg-btn' onClick={() => {
                                 setDeleteType('forMe');
@@ -246,52 +246,27 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                     </div>
                                 ) : isVoice ? (
                                     // Voice Message Player
-                                    <div className="voice-message" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.75rem',
-                                        padding: '0.5rem',
-                                        minWidth: '200px'
-                                    }}>
+                                    <div className="voice-message-player">
                                         <button
                                             onClick={togglePlayback}
-                                            style={{
-                                                background: 'rgba(255,255,255,0.2)',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '36px',
-                                                height: '36px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                color: 'white'
-                                            }}
+                                            className="voice-play-button"
                                         >
-                                            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                                            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                                         </button>
-                                        
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{
-                                                height: '4px',
-                                                background: 'rgba(255,255,255,0.3)',
-                                                borderRadius: '2px',
-                                                overflow: 'hidden',
-                                                marginBottom: '0.25rem'
-                                            }}>
-                                                <div style={{
-                                                    height: '100%',
-                                                    background: 'white',
-                                                    width: `${duration ? (currentTime / duration) * 100 : 0}%`,
-                                                    transition: 'width 0.1s linear'
-                                                }}></div>
+
+                                        <div className="voice-progress-container">
+                                            <div className="voice-progress-bar">
+                                                <div
+                                                    className="voice-progress-fill"
+                                                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                                                ></div>
                                             </div>
-                                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
+                                            <div className="voice-time">
                                                 {isPlaying ? formatAudioTime(currentTime) : formatAudioTime(duration)}
                                             </div>
                                         </div>
 
-                                        <Mic size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                                        <Mic size={16} className="voice-mic-icon" />
                                     </div>
                                 ) : (
                                     // Regular File
@@ -335,11 +310,11 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>Delete Message?</h3>
                         <p style={{ color: '#666', fontSize: '14px', marginBottom: '1rem' }}>
-                            {deleteType === 'forEveryone' 
-                                ? 'This will remove the message for all participants.' 
+                            {deleteType === 'forEveryone'
+                                ? 'This will remove the message for all participants.'
                                 : 'This will remove the message from your view only.'}
                         </p>
-                        <button 
+                        <button
                             onClick={handleDeleteConfirm}
                             style={{ background: '#e50914' }}
                         >

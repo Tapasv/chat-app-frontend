@@ -1656,3 +1656,67 @@ tbody td {
     opacity: 0.8;
   }
 }
+
+/* ==================== VOICE MESSAGE PLAYER ==================== */
+.voice-message-player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  min-width: 200px;
+}
+
+.voice-play-button {
+  background: var(--primary);
+  border: 2px solid var(--primary-dark);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  flex-shrink: 0;
+}
+
+.voice-play-button:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.voice-play-button:active {
+  transform: scale(0.95);
+}
+
+.voice-progress-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.voice-progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.voice-progress-fill {
+  height: 100%;
+  background: white;
+  transition: width 0.1s linear;
+}
+
+.voice-time {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.voice-mic-icon {
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}

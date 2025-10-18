@@ -1094,54 +1094,29 @@ export default function Chat() {
                 />
               </div>
             ) : isVoice ? (
-              <div className="voice-message" style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.5rem',
-                minWidth: '200px'
-              }}>
+              <div className="voice-message-player">
                 <button
                   onClick={() => toggleAudioPlayback(msg._id, msg.fileUrl)}
-                  style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '36px',
-                    height: '36px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: 'white'
-                  }}
+                  className="voice-play-button"
                 >
-                  {playingAudio === msg._id ? <Pause size={18} /> : <Play size={18} />}
+                  {playingAudio === msg._id ? <Pause size={20} /> : <Play size={20} />}
                 </button>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    height: '4px',
-                    background: 'rgba(255,255,255,0.3)',
-                    borderRadius: '2px',
-                    overflow: 'hidden',
-                    marginBottom: '0.25rem'
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      background: 'white',
-                      width: `${audioDurations[msg._id] ? (audioProgress[msg._id] / audioDurations[msg._id]) * 100 : 0}%`,
-                      transition: 'width 0.1s linear'
-                    }}></div>
+                <div className="voice-progress-container">
+                  <div className="voice-progress-bar">
+                    <div
+                      className="voice-progress-fill"
+                      style={{ width: `${audioDurations[msg._id] ? (audioProgress[msg._id] / audioDurations[msg._id]) * 100 : 0}%` }}
+                    ></div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
+                  <div className="voice-time">
                     {playingAudio === msg._id
                       ? formatAudioTime(audioProgress[msg._id])
                       : formatAudioTime(audioDurations[msg._id] || 0)}
                   </div>
                 </div>
 
-                <Mic size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                <Mic size={16} className="voice-mic-icon" />
               </div>
             ) : (
               <div className="file-info">
