@@ -33,7 +33,7 @@ const EditProfile = () => {
         const loadUserData = async () => {
             try {
                 const token = localStorage.getItem("accessToken");
-                const res = await axios.get(`${SERVER_URL}/profile/me`, {
+                const res = await axios.get(`${SERVER_URL}/api/profile/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsername(res.data.Username);
@@ -56,7 +56,7 @@ const EditProfile = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.put(`${SERVER_URL}/profile/update-username`, 
+            const res = await axios.put(`${SERVER_URL}/api/profile/update-username`, 
                 { Username: username },
                 { headers: { Authorization: `Bearer ${token}` }}
             );
@@ -83,7 +83,7 @@ const EditProfile = () => {
         setVerifyingPassword(true);
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.post(`${SERVER_URL}/profile/verify-password`,
+            await axios.post(`${SERVER_URL}/api/profile/verify-password`,
                 { currentPassword },
                 { headers: { Authorization: `Bearer ${token}` }}
             );
@@ -117,7 +117,7 @@ const EditProfile = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.put(`${SERVER_URL}/profile/update-password`,
+            const res = await axios.put(`${SERVER_URL}/api/profile/update-password`,
                 { currentPassword, newPassword },
                 { headers: { Authorization: `Bearer ${token}` }}
             );
@@ -143,7 +143,7 @@ const EditProfile = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.post(`${SERVER_URL}/profile/request-email-change`,
+            const res = await axios.post(`${SERVER_URL}/api/profile/request-email-change`,
                 { newEmail: email },
                 { headers: { Authorization: `Bearer ${token}` }}
             );

@@ -31,7 +31,7 @@ export const Authprovider = ({ children }) => {
         }, 10000); // 10 second timeout
 
         try {
-            const response = await axios.get(`${SERVER_URL}/auth/validate`, {
+            const response = await axios.get(`${SERVER_URL}/api/auth/validate`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -80,7 +80,7 @@ export const Authprovider = ({ children }) => {
         try {
             const refreshToken = localStorage.getItem("refreshToken");
             if (refreshToken) {
-                await axios.post(`${SERVER_URL}/auth/logout`, { refreshToken });
+                await axios.post(`${SERVER_URL}/api/auth/logout`, { refreshToken });
             }
         } catch (error) {
             console.error("Logout error:", error);

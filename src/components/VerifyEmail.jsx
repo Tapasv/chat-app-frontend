@@ -15,7 +15,7 @@ const VerifyEmail = () => {
     useEffect(() => {
         const verifyEmail = async () => {
             try {
-                const res = await axios.post(`${SERVER_URL}/profile/verify-email/${token}`);
+                const res = await axios.post(`${SERVER_URL}/api/profile/verify-email/${token}`);
                 toast.success(res.data.message);
                 setSuccess(true);
                 
