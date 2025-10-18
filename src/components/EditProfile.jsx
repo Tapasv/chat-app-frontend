@@ -477,8 +477,6 @@ const EditProfile = () => {
             >
                 Back to Chat
             </button>
-
-            <ToastContainer />
         </div>
     );
 };
