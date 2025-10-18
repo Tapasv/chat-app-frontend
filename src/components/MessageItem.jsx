@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { Play, Pause, Mic } from 'lucide-react';
 import apimessage from '../apimessage';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -11,11 +12,18 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteType, setDeleteType] = useState(null);
     
+    // Voice message states
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    
     const optionsRef = useRef(null);
+    const audioRef = useRef(null);
 
     const isCurrentUser = message.sender?._id === currentUser?._id;
     const isDeletedForEveryone = message.deletedForEveryone;
     const isFile = message.fileUrl;
+    const isVoice = message.isVoiceMessage || (message.fileType && (message.fileType.includes('audio') || message.fileName?.includes('voice-')));
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -33,6 +41,16 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showOptions]);
+
+    // Cleanup audio on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
 
     const canEditOrDelete = () => {
         const messageTime = new Date(message.createdAt).getTime();
@@ -79,6 +97,41 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to delete message');
         }
+    };
+
+    // Voice message functions
+    const togglePlayback = () => {
+        if (!audioRef.current) {
+            audioRef.current = new Audio(`${SERVER_URL}${message.fileUrl}`);
+            
+            audioRef.current.addEventListener('loadedmetadata', () => {
+                setDuration(audioRef.current.duration);
+            });
+
+            audioRef.current.addEventListener('timeupdate', () => {
+                setCurrentTime(audioRef.current.currentTime);
+            });
+
+            audioRef.current.addEventListener('ended', () => {
+                setIsPlaying(false);
+                setCurrentTime(0);
+            });
+        }
+
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            audioRef.current.play();
+            setIsPlaying(true);
+        }
+    };
+
+    const formatAudioTime = (seconds) => {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     const formatFileSize = (bytes) => {
@@ -147,7 +200,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                             )}
                             
                             {/* FOR EVERYONE: Show Delete for Me */}
-                            <button className='.dlt-msg-btn'  onClick={() => {
+                            <button className='dlt-msg-btn' onClick={() => {
                                 setDeleteType('forMe');
                                 setShowDeleteModal(true);
                                 setShowOptions(false);
@@ -191,21 +244,71 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                             onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, '_blank')}
                                         />
                                     </div>
+                                ) : isVoice ? (
+                                    // Voice Message Player
+                                    <div className="voice-message" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.75rem',
+                                        padding: '0.5rem',
+                                        minWidth: '200px'
+                                    }}>
+                                        <button
+                                            onClick={togglePlayback}
+                                            style={{
+                                                background: 'rgba(255,255,255,0.2)',
+                                                border: 'none',
+                                                borderRadius: '50%',
+                                                width: '36px',
+                                                height: '36px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                color: 'white'
+                                            }}
+                                        >
+                                            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                                        </button>
+                                        
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{
+                                                height: '4px',
+                                                background: 'rgba(255,255,255,0.3)',
+                                                borderRadius: '2px',
+                                                overflow: 'hidden',
+                                                marginBottom: '0.25rem'
+                                            }}>
+                                                <div style={{
+                                                    height: '100%',
+                                                    background: 'white',
+                                                    width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                                                    transition: 'width 0.1s linear'
+                                                }}></div>
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
+                                                {isPlaying ? formatAudioTime(currentTime) : formatAudioTime(duration)}
+                                            </div>
+                                        </div>
+
+                                        <Mic size={16} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                                    </div>
                                 ) : (
+                                    // Regular File
                                     <div className="file-info">
                                         <div className="file-icon">📄</div>
                                         <div className="file-details">
                                             <div className="file-name">{message.fileName}</div>
                                             <div className="file-size">{formatFileSize(message.fileSize)}</div>
                                         </div>
+                                        <button
+                                            className="download-btn"
+                                            onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, '_blank')}
+                                        >
+                                            Download
+                                        </button>
                                     </div>
                                 )}
-                                <button
-                                    className="download-btn"
-                                    onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, '_blank')}
-                                >
-                                    Download
-                                </button>
                             </div>
                         ) : (
                             <>
