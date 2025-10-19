@@ -159,6 +159,11 @@ export default function Chat() {
     });
 
     socket.on("newMessageNotification", (notif) => {
+      console.log("📨 Notification received:", notif);
+      console.log("👤 Sender data:", notif.sender);
+      console.log("🖼️ Profile picture path:", notif.sender?.profilePicture);
+      console.log("🌐 Full URL:", notif.sender?.profilePicture ? `${SERVER_URL}${notif.sender.profilePicture}` : 'No picture');
+
       showBrowserNotification(
         `New message from ${notif.sender.Username}`,
         notif.message,
@@ -1181,32 +1186,40 @@ export default function Chat() {
     <div className="whatsapp-container">
       {notifications.map((notif, index) => (
         <div key={index} className="browser-notification" onClick={() => {
-          const sender = friends.find(f => f._id === notif.sender._id);
+          const sender = friends.find(f => f._id === notif.sender?._id);
           if (sender) loadPrivateChat(sender);
           setNotifications(prev => prev.filter(n => n !== notif));
         }}>
           <div className="notification-header">
             <div className="notification-avatar">
-              {notif.sender.profilePicture ? (
+              {notif.sender?.profilePicture ? (
                 <img
                   src={notif.sender.profilePicture.startsWith('http')
                     ? notif.sender.profilePicture
                     : `${SERVER_URL}${notif.sender.profilePicture}`
                   }
                   alt={notif.sender.Username}
+                  onLoad={() => console.log('✅ Image loaded:', notif.sender.profilePicture)}
                   onError={(e) => {
+                    console.error('❌ Image error:', e.target.src);
                     e.target.style.display = 'none';
-                    e.target.parentElement.textContent = notif.sender.Username[0];
+                    e.target.parentElement.textContent = notif.sender.Username?.[0] || '?';
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '50%'
                   }}
                 />
               ) : (
-                notif.sender.Username[0]
+                notif.sender?.Username?.[0] || '?'
               )}
             </div>
             <div className="notification-title">Chatify</div>
           </div>
           <div className="notification-body">
-            <strong>{notif.sender.Username}:</strong> {notif.message}
+            <strong>{notif.sender?.Username}:</strong> {notif.message}
           </div>
         </div>
       ))}
