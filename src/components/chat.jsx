@@ -212,6 +212,22 @@ export default function Chat() {
       toast.info("A friend removed you from their list");
     });
 
+    socket.on("messageDeleted", ({ messageId, deletedForEveryone }) => {
+      setPrivateMessage(prev => {
+        if (deletedForEveryone) {
+          // Update the message to show as deleted for everyone
+          return prev.map(m =>
+            m._id === messageId
+              ? { ...m, deletedForEveryone: true, text: '' }
+              : m
+          );
+        } else {
+          // Remove message for "delete for me"
+          return prev.filter(m => m._id !== messageId);
+        }
+      });
+    });
+
     socket.on("incomingCall", ({ from, caller, signalData, callType }) => {
       console.log("Incoming call received:", { from, caller, callType });
 
@@ -266,6 +282,7 @@ export default function Chat() {
       socket.off("friendRequestAccepted");
       socket.off("friendRequestRejected");
       socket.off("friendRemoved");
+      socket.off("messageDeleted"); 
       socket.off("incomingCall");
       socket.off("callAccepted");
       socket.off("iceCandidate");

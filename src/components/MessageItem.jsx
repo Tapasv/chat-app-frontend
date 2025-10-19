@@ -52,11 +52,18 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
         };
     }, []);
 
-    const canEditOrDelete = () => {
+    const canEdit = () => {
         const messageTime = new Date(message.createdAt).getTime();
         const now = Date.now();
         const fifteenMinutes = 15 * 60 * 1000;
         return (now - messageTime) < fifteenMinutes;
+    };
+
+    const canDelete = () => {
+        const messageTime = new Date(message.createdAt).getTime();
+        const now = Date.now();
+        const twodays = 2 * 24 * 60 * 60 * 1000;
+        return (now - messageTime) < twodays;
     };
 
     const handleEdit = async () => {
@@ -180,7 +187,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                     {showOptions && (
                         <div className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
                             {/* FOR SENDER: Show Edit and Delete for Everyone (within 15 min) */}
-                            {isCurrentUser && !isFile && canEditOrDelete() && (
+                            {isCurrentUser && !isFile && canEdit() && (
                                 <button onClick={() => {
                                     setIsEditing(true);
                                     setShowOptions(false);
@@ -189,7 +196,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 </button>
                             )}
 
-                            {isCurrentUser && (
+                            {isCurrentUser && canDelete() && (
                                 <button onClick={() => {
                                     setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
