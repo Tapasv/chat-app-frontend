@@ -1189,7 +1189,10 @@ export default function Chat() {
             <div className="notification-avatar">
               {notif.sender.profilePicture ? (
                 <img
-                  src={notif.sender.profilePicture}
+                  src={notif.sender.profilePicture.startsWith('http')
+                    ? notif.sender.profilePicture
+                    : `${SERVER_URL}${notif.sender.profilePicture}`
+                  }
                   alt={notif.sender.Username}
                   onError={(e) => {
                     e.target.style.display = 'none';
