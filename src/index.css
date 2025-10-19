@@ -1674,12 +1674,13 @@ tbody td {
   height: 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   cursor: pointer;
   color: white;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   flex-shrink: 0;
+  padding: 0;
 }
 
 .voice-play-button:hover {
