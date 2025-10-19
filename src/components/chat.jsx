@@ -228,6 +228,16 @@ export default function Chat() {
       });
     });
 
+    socket.on("messageEdited", ({ messageId, text, isEdited }) => {
+      setPrivateMessage(prev =>
+        prev.map(m =>
+          m._id === messageId
+            ? { ...m, text: text, isEdited: isEdited }
+            : m
+        )
+      );
+    });
+
     socket.on("incomingCall", ({ from, caller, signalData, callType }) => {
       console.log("Incoming call received:", { from, caller, callType });
 
@@ -282,7 +292,8 @@ export default function Chat() {
       socket.off("friendRequestAccepted");
       socket.off("friendRequestRejected");
       socket.off("friendRemoved");
-      socket.off("messageDeleted"); 
+      socket.off("messageDeleted");
+      socket.off("messageEdited");
       socket.off("incomingCall");
       socket.off("callAccepted");
       socket.off("iceCandidate");
