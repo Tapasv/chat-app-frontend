@@ -229,7 +229,7 @@ nav {
   }
 
   .Welcome h1 {
-    margin: 0 !important;
+    margin: 0 ;
   }
 
   .lgt-btn {
@@ -237,7 +237,7 @@ nav {
   }
 
   .chat-hdng {
-    margin: 0 !important;
+    margin: 0 ;
   }
 }
 
@@ -934,6 +934,34 @@ nav {
   box-shadow: none;
 }
 
+.admin-chat {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  padding: 0.6rem 1.2rem;
+  font-Size: 0.95re;
+  display: flex;
+  align-Items: center;
+  gap: 0.5rem;
+  border: none;
+  border-Radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-Weight: 500
+}
+
+.admin-logout {
+  background: linear-gradient(135deg, #dc3545, #a02834);
+  padding: 0.6rem 1.2rem;
+  font-Size: 0.95re;
+  display: flex;
+  align-Items: center;
+  gap: 0.5rem;
+  border: none;
+  border-Radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-Weight: 500
+}
+
 .input-action-btn:hover {
   border-color: var(--primary);
   background: rgba(37, 99, 235, 0.1);
@@ -1623,6 +1651,92 @@ tbody td {
   }
 }
 
+@media (max-width: 400px) {
+
+  .Admin-div {
+    padding: 1rem;
+    margin: 10px;
+  }
+
+  .Admin-div h1 {
+    font-size: 1.25rem;
+  }
+
+  .Admin-div>div {
+    flex-direction: column; /*it is used to make items veritcally allgned */
+    gap: 0.75rem ;
+    align-items: flex-start ;
+  }
+
+  .Admin-div>div>div {
+    width: 100%;
+    justify-content: flex-start ;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  thead {
+    display: none; /* this is removing table head titles (Username, role action) */
+  }
+
+  tbody,
+  tr {
+    display: block;
+    width: 100%;
+  }
+
+  tr {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  tr:hover {
+    transform: none;
+  }
+
+  td {
+    display: block;
+    padding: 0.5rem 0 ;
+    border: none ;
+    text-align: left ;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--primary);
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+
+  td.action::before {
+    content: '';
+  }
+
+  td.action {
+    margin-top: 0.5rem;
+  }
+
+  .dlt-btn {
+    width: 100%;
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .admin-chat,
+  .admin-logout {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
 /* Fix menu positioning */
 .options-menu.menu-right {
   right: 0;
@@ -1654,7 +1768,7 @@ tbody td {
   }
 
   .message {
-    max-width: 85% !important;
+    max-width: 85% ;
   }
 
   .message-bubble {

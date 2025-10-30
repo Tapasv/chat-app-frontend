@@ -58,38 +58,13 @@ const Adminpanel = () => {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             onClick={() => navigate('/chat')}
-            style={{
-              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-              padding: '0.6rem 1.2rem',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            className="admin-chat"
           >
             <MessageCircle size={18} />
             Chat
           </button>
           <button
-            onClick={handleLogout}
-            style={{
-              background: 'linear-gradient(135deg, #dc3545, #a02834)',
-              padding: '0.6rem 1.2rem',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            className="admin-logout"
           >
             <LogOut size={18} />
             Logout
@@ -109,7 +84,7 @@ const Adminpanel = () => {
           <p style={{ color: 'var(--text-muted)' }}>No users found</p>
         </div>
       ) : (
-        <table>
+        <table className="user-table">
           <thead>
             <tr>
               <th>Username</th>
@@ -117,24 +92,14 @@ const Adminpanel = () => {
               <th className="action">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="user-table-body">
             {user.map((u) => (
               <tr key={u._id}>
-                <td>
+                <td data-label="Username">
                   <strong>{u.Username}</strong>
                 </td>
-                <td>
-                  <span style={{
-                    padding: '0.3rem 0.8rem',
-                    borderRadius: '20px',
-                    background: u.role === 'Admin'
-                      ? 'linear-gradient(135deg, var(--primary), var(--primary-dark))'
-                      : 'rgba(255, 255, 255, 0.1)',
-                    fontSize: '0.85rem',
-                    fontWeight: '600'
-                  }}>
-                    {u.role}
-                  </span>
+                <td data-label="Role">
+                  <span>{u.role}</span>
                 </td>
                 <td className="action">
                   <button
@@ -142,9 +107,7 @@ const Adminpanel = () => {
                     type="button"
                     onClick={() => deleteuser(u._id, u.Username)}
                     style={{
-                      background: 'linear-gradient(135deg, #dc3545, #a02834)',
-                      padding: '0.5rem 1.2rem',
-                      fontSize: '0.9rem'
+                      background: 'linear-gradient(135deg, #dc3545, #a02834)'
                     }}
                   >
                     🗑️ Delete

@@ -1240,7 +1240,16 @@ export default function Chat() {
             )}
           </div>
           <div className="user-info">
-            <h4 className="user-name">{currentUser?.Username || 'User'}</h4>
+            <h4 className="user-name">
+              {currentUser?.role === 'Admin' ? (
+                <>
+                  <MessageCircle size={16} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
+                  Chatify
+                </>
+              ) : (
+                currentUser?.Username || 'User'
+              )}
+            </h4>
             <p className="user-status">Online</p>
           </div>
           <button
