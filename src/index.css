@@ -1413,15 +1413,12 @@ tbody td {
 .options-menu {
   position: absolute;
   top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
   min-width: 180px;
-  max-width: 220px;
-  white-space: nowrap;
   overflow: hidden;
   margin-top: 4px;
 }
@@ -1436,9 +1433,8 @@ tbody td {
   cursor: pointer;
   transition: background 0.2s;
   font-size: 14px;
-  color: #333;
-  /* FIXED: Dark text color */
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
 }
 
 .options-menu button:last-child {
@@ -1446,11 +1442,11 @@ tbody td {
 }
 
 .options-menu button:hover {
-  background: #f5f5f5;
+  background: var(--bg-hover);
 }
 
 .options-menu button:active {
-  background: #e8e8e8;
+  background: var(--border);
 }
 
 .edited-tag {

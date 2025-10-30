@@ -197,11 +197,8 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
 
                     {showOptions && (
                         <div
-                            className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}
-                            style={{
-                                transform: isCurrentUser ? 'translateX(-100%)' : 'translateX(0)',
-                            }}
-                        >
+                            className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
+                                
                             {/* FOR SENDER: Show Edit and Delete for Everyone (within time limits) */}
                             {isCurrentUser && !isFile && canEdit() && (
                                 <button onClick={() => {
