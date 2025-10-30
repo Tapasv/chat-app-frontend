@@ -2336,20 +2336,25 @@ tbody td {
 
   .options-menu {
     position: fixed;
-    top: auto;
-    bottom: auto;
-    max-height: 200px;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-height: 300px;
     overflow-y: auto;
-    min-width: 160px;
-    max-width: 200px;
+    min-width: 180px;
+    max-width: 250px;
+    z-index: 9999;
   }
 
-  .options-menu.menu-right {
-    right: 1rem;
-  }
-
+  .options-menu.menu-right,
   .options-menu.menu-left {
-    left: 1rem;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    margin: 0;
   }
 
   .message {
@@ -2388,6 +2393,7 @@ tbody td {
   .options-btn {
     opacity: 1;
     background: rgba(255, 255, 255, 0.05);
+    padding: 6px 10px;
   }
 
   .options-btn:active {
@@ -2396,6 +2402,24 @@ tbody td {
 
   .message:hover .options-btn {
     opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .options-menu {
+    min-width: 160px;
+    max-width: 90%;
+    font-size: 13px;
+  }
+
+  .options-menu button {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .message-bubble {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.9rem;
   }
 }
 

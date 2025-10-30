@@ -116,7 +116,14 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
 
             console.log('🎵 Loading audio from:', audioUrl);
 
-            audioRef.current = new Audio(audioUrl);
+            // Try to create audio with multiple format fallbacks
+            audioRef.current = new Audio();
+
+            // Set the source
+            audioRef.current.src = audioUrl;
+
+            // Try to load it
+            audioRef.current.load();
 
             audioRef.current.addEventListener('loadedmetadata', () => {
                 console.log('✅ Audio loaded, duration:', audioRef.current.duration);
@@ -136,8 +143,23 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             audioRef.current.addEventListener('error', (e) => {
                 console.error('❌ Audio error:', e);
                 console.error('Audio URL:', audioUrl);
-                toast.error('Failed to load audio');
+                console.error('Error code:', audioRef.current?.error?.code);
+                console.error('Error message:', audioRef.current?.error?.message);
+
+                // Try to fetch the file directly to check if it exists
+                fetch(audioUrl, { method: 'HEAD' })
+                    .then(response => {
+                        console.log('File exists:', response.ok);
+                        console.log('Content-Type:', response.headers.get('content-type'));
+                    })
+                    .catch(err => console.error('Fetch error:', err));
+
+                toast.error('Failed to load audio file');
                 setIsPlaying(false);
+            });
+
+            audioRef.current.addEventListener('canplay', () => {
+                console.log('✅ Audio can play');
             });
         }
 
@@ -147,11 +169,14 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
         } else {
             audioRef.current.play()
                 .then(() => {
+                    console.log('✅ Playing audio');
                     setIsPlaying(true);
                 })
                 .catch(err => {
                     console.error('❌ Play error:', err);
                     console.error('Audio src:', audioRef.current?.src);
+                    console.error('Audio readyState:', audioRef.current?.readyState);
+                    console.error('Audio networkState:', audioRef.current?.networkState);
                     toast.error('Failed to play audio');
                     setIsPlaying(false);
                 });
