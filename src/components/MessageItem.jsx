@@ -215,7 +215,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 </button>
                             )}
 
-                            {isCurrentUser && canDeleteForEveryone() && (
+                            {isCurrentUser && canDelete() && (
                                 <button onClick={() => {
                                     setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
