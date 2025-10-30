@@ -4,8 +4,9 @@ import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import { Authcntxt } from "../context/authcontext";
 import { useContext } from "react";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic, Play, Pause, MessageCircle } from 'lucide-react';
+import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic, Play, Pause } from 'lucide-react';
 import MessageItem from "./MessageItem";
 import "react-toastify/dist/ReactToastify.css";
 import EmojiPicker from 'emoji-picker-react';
@@ -1239,16 +1240,7 @@ export default function Chat() {
             )}
           </div>
           <div className="user-info">
-            <h4 className="user-name">
-              {currentUser?.role === 'Admin' ? (
-                <>
-                  <MessageCircle size={16} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
-                  Chatify
-                </>
-              ) : (
-                currentUser?.Username || 'User'
-              )}
-            </h4>
+            <h4 className="user-name">{currentUser?.Username || 'User'}</h4>
             <p className="user-status">Online</p>
           </div>
           <button
