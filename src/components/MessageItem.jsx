@@ -199,10 +199,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                         <div
                             className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}
                             style={{
-                                position: 'fixed',
                                 transform: isCurrentUser ? 'translateX(-100%)' : 'translateX(0)',
-                                maxHeight: '200px',
-                                overflowY: 'auto'
                             }}
                         >
                             {/* FOR SENDER: Show Edit and Delete for Everyone (within time limits) */}
