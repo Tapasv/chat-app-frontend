@@ -62,8 +62,8 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     const canDelete = () => {
         const messageTime = new Date(message.createdAt).getTime();
         const now = Date.now();
-        const twodays = 2 * 24 * 60 * 60 * 1000;
-        return (now - messageTime) < twodays;
+        const twoDays = 2 * 24 * 60 * 60 * 1000;
+        return (now - messageTime) < twoDays;
     };
 
     const handleEdit = async () => {
@@ -122,6 +122,13 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             audioRef.current.addEventListener('ended', () => {
                 setIsPlaying(false);
                 setCurrentTime(0);
+                audioRef.current.currentTime = 0;
+            });
+
+            audioRef.current.addEventListener('error', (e) => {
+                console.error('Audio error:', e);
+                toast.error('Failed to load audio');
+                setIsPlaying(false);
             });
         }
 
@@ -129,7 +136,11 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             audioRef.current.pause();
             setIsPlaying(false);
         } else {
-            audioRef.current.play();
+            audioRef.current.play().catch(err => {
+                console.error('Play error:', err);
+                toast.error('Failed to play audio');
+                setIsPlaying(false);
+            });
             setIsPlaying(true);
         }
     };
@@ -185,8 +196,16 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                     </button>
 
                     {showOptions && (
-                        <div className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
-                            {/* FOR SENDER: Show Edit and Delete for Everyone (within 15 min) */}
+                        <div
+                            className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}
+                            style={{
+                                position: 'fixed',
+                                transform: isCurrentUser ? 'translateX(-100%)' : 'translateX(0)',
+                                maxHeight: '200px',
+                                overflowY: 'auto'
+                            }}
+                        >
+                            {/* FOR SENDER: Show Edit and Delete for Everyone (within time limits) */}
                             {isCurrentUser && !isFile && canEdit() && (
                                 <button onClick={() => {
                                     setIsEditing(true);
@@ -196,7 +215,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 </button>
                             )}
 
-                            {isCurrentUser && canDelete() && (
+                            {isCurrentUser && canDeleteForEveryone() && (
                                 <button onClick={() => {
                                     setDeleteType('forEveryone');
                                     setShowDeleteModal(true);
@@ -206,7 +225,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 </button>
                             )}
 
-                            {/* FOR EVERYONE: Show Delete for Me */}
+                            {/* FOR EVERYONE: Show Delete for Me (always available) */}
                             <button className='dlt-msg-btn' onClick={() => {
                                 setDeleteType('forMe');
                                 setShowDeleteModal(true);
