@@ -2335,26 +2335,37 @@ tbody td {
   }
 
   .options-menu {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    transform: translate(-50%, -50%);
-    max-height: 300px;
+    position: absolute;
+    top: 100%;
+    left: auto;
+    right: 0;
+    transform: none;
+    max-height: 200px;
     overflow-y: auto;
-    min-width: 180px;
-    max-width: 250px;
+    min-width: 160px;
+    max-width: 200px;
     z-index: 9999;
+    margin-top: 0.5rem;
   }
 
-  .options-menu.menu-right,
+  .options-menu.menu-right {
+    right: 0;
+    left: auto;
+  }
+
   .options-menu.menu-left {
-    position: fixed;
-    top: 50%;
-    left: 50%;
+    left: 0;
     right: auto;
-    transform: translate(-50%, -50%);
-    margin: 0;
+  }
+
+  .message.sent .options-menu {
+    right: 0;
+    left: auto;
+  }
+
+  .message.received .options-menu {
+    left: 0;
+    right: auto;
   }
 
   .message {
@@ -2407,13 +2418,12 @@ tbody td {
 
 @media (max-width: 480px) {
   .options-menu {
-    min-width: 160px;
-    max-width: 90%;
-    font-size: 13px;
+    min-width: 140px;
+    max-width: 180px;
   }
 
   .options-menu button {
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 
