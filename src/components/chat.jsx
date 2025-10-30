@@ -1500,23 +1500,39 @@ export default function Chat() {
                     </p>
                   </div>
                 </div>
-                <button
-                  className="btn-unfriend"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    unfriendUser(friend._id);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    padding: '0.3rem 0.6rem',
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  Remove
-                </button>
+                <div className="chat-actions" ref={chatMenuRef} style={{ position: 'relative' }}>
+                  <button onClick={() => setShowChatMenu(!ShowChatMenu)}>
+                    <MoreVertical size={20} />
+                  </button>
+
+                  {ShowChatMenu && (
+                    <div className="options-menu menu-right" style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '0.5rem',
+                      minWidth: '180px'
+                    }}>
+                      <button
+                        className="btn-unfriend"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          unfriendUser(friend._id);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          right: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          padding: '0.3rem 0.6rem',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           )}
