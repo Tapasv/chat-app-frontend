@@ -109,9 +109,17 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
     // Voice message functions
     const togglePlayback = () => {
         if (!audioRef.current) {
-            audioRef.current = new Audio(`${SERVER_URL}${message.fileUrl}`);
+            // Construct the proper audio URL
+            const audioUrl = message.fileUrl.startsWith('http')
+                ? message.fileUrl
+                : `${SERVER_URL}${message.fileUrl}`;
+
+            console.log('🎵 Loading audio from:', audioUrl);
+
+            audioRef.current = new Audio(audioUrl);
 
             audioRef.current.addEventListener('loadedmetadata', () => {
+                console.log('✅ Audio loaded, duration:', audioRef.current.duration);
                 setDuration(audioRef.current.duration);
             });
 
@@ -126,7 +134,8 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             });
 
             audioRef.current.addEventListener('error', (e) => {
-                console.error('Audio error:', e);
+                console.error('❌ Audio error:', e);
+                console.error('Audio URL:', audioUrl);
                 toast.error('Failed to load audio');
                 setIsPlaying(false);
             });
@@ -136,12 +145,16 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
             audioRef.current.pause();
             setIsPlaying(false);
         } else {
-            audioRef.current.play().catch(err => {
-                console.error('Play error:', err);
-                toast.error('Failed to play audio');
-                setIsPlaying(false);
-            });
-            setIsPlaying(true);
+            audioRef.current.play()
+                .then(() => {
+                    setIsPlaying(true);
+                })
+                .catch(err => {
+                    console.error('❌ Play error:', err);
+                    console.error('Audio src:', audioRef.current?.src);
+                    toast.error('Failed to play audio');
+                    setIsPlaying(false);
+                });
         }
     };
 
@@ -198,7 +211,7 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                     {showOptions && (
                         <div
                             className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
-                                
+
                             {/* FOR SENDER: Show Edit and Delete for Everyone (within time limits) */}
                             {isCurrentUser && !isFile && canEdit() && (
                                 <button onClick={() => {
