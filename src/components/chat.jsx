@@ -66,6 +66,7 @@ export default function Chat() {
   const partnerVideoRef = useRef(null);
 
   const [ShowChatMenu, setShowChatMenu] = useState(false);
+  const [ShowfrndMenu, setShowfrndMenu] = useState(null);
   const [blockedUser, setBlockedUser] = useState([]);
   const chatMenuRef = useRef(null);
 
@@ -368,6 +369,17 @@ export default function Chat() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) {
+      setShowfrndMenu(null);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   const searchUsers = async (query) => {
     if (!query.trim()) {
@@ -1469,11 +1481,8 @@ export default function Chat() {
             </div>
           ) : (
             filteredFriends.map(friend => (
-              <div key={friend._id} style={{ position: 'relative' }}>
-                <div
-                  className="user-item"
-                  onClick={() => loadPrivateChat(friend)}
-                >
+              <div key={friend._id} className="user-item" style={{ position: 'relative' }}>
+                <div onClick={() => loadPrivateChat(friend)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
                   <div className="user-avatar">
                     {friend.profilePicture ? (
                       <img
@@ -1500,34 +1509,23 @@ export default function Chat() {
                     </p>
                   </div>
                 </div>
-                <div className="chat-actions" ref={chatMenuRef} style={{ position: 'relative' }}>
-                  <button onClick={() => setShowChatMenu(!ShowChatMenu)}>
+
+                <div className="frnd-actions" ref={chatMenuRef}>
+                  <button className="frnd-actions-btn" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowfrndMenu(ShowfrndMenu === friend._id ? null : friend._id);
+                  }}>
                     <MoreVertical size={20} />
                   </button>
 
-                  {ShowChatMenu && (
-                    <div className="options-menu menu-right" style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      marginTop: '0.5rem',
-                      minWidth: '180px'
-                    }}>
+                  {ShowfrndMenu === friend._id && (
+                    <div className="frnd-menu">
                       <button
-                        className="btn-unfriend"
                         onClick={(e) => {
                           e.stopPropagation();
                           unfriendUser(friend._id);
-                        }}
-                        style={{
-                          position: 'absolute',
-                          right: '10px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          padding: '0.3rem 0.6rem',
-                          fontSize: '0.75rem'
-                        }}
-                      >
+                          setShowfrndMenu(null);
+                        }}>
                         Remove
                       </button>
                     </div>
