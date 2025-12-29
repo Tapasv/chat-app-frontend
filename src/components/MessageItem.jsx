@@ -1,394 +1,286 @@
-import { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-toastify';
-import { Play, Pause, Mic } from 'lucide-react';
-import apimessage from '../apimessage';
+import { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
+import { Play, Pause, Mic, MoreVertical } from "lucide-react";
+import apimessage from "../apimessage";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [editContent, setEditContent] = useState(message.text || '');
-    const [showOptions, setShowOptions] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [deleteType, setDeleteType] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.text || "");
+  const [showOptions, setShowOptions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteType, setDeleteType] = useState(null);
 
-    // Voice message states
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [duration, setDuration] = useState(0);
-    const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
-    const optionsRef = useRef(null);
-    const audioRef = useRef(null);
+  const audioRef = useRef(null);
+  const optionsRef = useRef(null);
 
-    const isCurrentUser = message.sender?._id === currentUser?._id;
-    const isDeletedForEveryone = message.deletedForEveryone;
-    const isFile = message.fileUrl;
-    const isVoice = message.isVoiceMessage || (message.fileType && (message.fileType.includes('audio') || message.fileName?.includes('voice-')));
+  const isCurrentUser = message.sender?._id === currentUser?._id;
+  const isVoice = message.isVoiceMessage === true;
+  const isFile = message.fileUrl && !isVoice;
+  const isDeletedForEveryone = message.deletedForEveryone;
 
-    // Close menu when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (optionsRef.current && !optionsRef.current.contains(event.target)) {
-                setShowOptions(false);
-            }
-        };
-
-        if (showOptions) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showOptions]);
-
-    // Cleanup audio on unmount
-    useEffect(() => {
-        return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current = null;
-            }
-        };
-    }, []);
-
-    const canEdit = () => {
-        const messageTime = new Date(message.createdAt).getTime();
-        const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000;
-        return (now - messageTime) < fifteenMinutes;
+  /* ---------- OUTSIDE CLICK ---------- */
+  useEffect(() => {
+    const handler = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target)) {
+        setShowOptions(false);
+      }
     };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
-    const canDelete = () => {
-        const messageTime = new Date(message.createdAt).getTime();
-        const now = Date.now();
-        const twoDays = 2 * 24 * 60 * 60 * 1000;
-        return (now - messageTime) < twoDays;
+  /* ---------- CLEANUP AUDIO ---------- */
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
+  }, []);
 
-    const handleEdit = async () => {
-        if (!editContent.trim()) {
-            toast.error('Message cannot be empty');
-            return;
-        }
+  /* ---------- PERMISSIONS ---------- */
+  const canEdit = () =>
+    message.createdAt &&
+    Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000;
 
-        try {
-            const res = await apimessage.put(`/edit/${message._id}`, {
-                text: editContent
-            });
+  const canDelete = () =>
+    message.createdAt &&
+    Date.now() - new Date(message.createdAt).getTime() < 48 * 60 * 60 * 1000;
 
-            toast.success('Message edited');
-            setIsEditing(false);
-            onMessageUpdate(res.data.data);
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to edit message');
-        }
-    };
+  /* ---------- EDIT ---------- */
+  const handleEdit = async () => {
+    if (!editContent.trim()) return toast.error("Message cannot be empty");
+    try {
+      const res = await apimessage.put(`/edit/${message._id}`, {
+        text: editContent
+      });
+      onMessageUpdate(res.data.data);
+      setIsEditing(false);
+      toast.success("Message edited");
+    } catch {
+      toast.error("Failed to edit message");
+    }
+  };
 
-    const handleDeleteConfirm = async () => {
-        try {
-            const res = await apimessage.delete(`/delete/${message._id}`, {
-                data: { deleteType }
-            });
+  /* ---------- DELETE ---------- */
+  const handleDeleteConfirm = async () => {
+    try {
+      const res = await apimessage.delete(`/delete/${message._id}`, {
+        data: { deleteType }
+      });
 
-            toast.success(res.data.message);
-            setShowDeleteModal(false);
-            setShowOptions(false);
-            setDeleteType(null);
+      deleteType === "forMe"
+        ? onMessageDelete(message._id)
+        : onMessageUpdate(res.data.data);
 
-            if (deleteType === 'forMe') {
-                onMessageDelete(message._id);
-            } else {
-                onMessageUpdate(res.data.data);
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to delete message');
-        }
-    };
+      toast.success(res.data.message);
+      setShowDeleteModal(false);
+      setDeleteType(null);
+    } catch {
+      toast.error("Failed to delete message");
+    }
+  };
 
-    // Voice message functions
-    const togglePlayback = () => {
-        if (!audioRef.current) {
-            // Construct the proper audio URL
-            const audioUrl = message.fileUrl.startsWith('http')
-                ? message.fileUrl
-                : `${SERVER_URL}${message.fileUrl}`;
-
-            console.log('🎵 Loading audio from:', audioUrl);
-
-            // Try to create audio with multiple format fallbacks
-            audioRef.current = new Audio();
-
-            // Set the source
-            audioRef.current.src = audioUrl;
-
-            // Try to load it
-            audioRef.current.load();
-
-            audioRef.current.addEventListener('loadedmetadata', () => {
-                console.log('✅ Audio loaded, duration:', audioRef.current.duration);
-                setDuration(audioRef.current.duration);
-            });
-
-            audioRef.current.addEventListener('timeupdate', () => {
-                setCurrentTime(audioRef.current.currentTime);
-            });
-
-            audioRef.current.addEventListener('ended', () => {
-                setIsPlaying(false);
-                setCurrentTime(0);
-                audioRef.current.currentTime = 0;
-            });
-
-            audioRef.current.addEventListener('error', (e) => {
-                console.error('❌ Audio error:', e);
-                console.error('Audio URL:', audioUrl);
-                console.error('Error code:', audioRef.current?.error?.code);
-                console.error('Error message:', audioRef.current?.error?.message);
-
-                // Try to fetch the file directly to check if it exists
-                fetch(audioUrl, { method: 'HEAD' })
-                    .then(response => {
-                        console.log('File exists:', response.ok);
-                        console.log('Content-Type:', response.headers.get('content-type'));
-                    })
-                    .catch(err => console.error('Fetch error:', err));
-
-                toast.error('Failed to load audio file');
-                setIsPlaying(false);
-            });
-
-            audioRef.current.addEventListener('canplay', () => {
-                console.log('✅ Audio can play');
-            });
-        }
-
-        if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play()
-                .then(() => {
-                    console.log('✅ Playing audio');
-                    setIsPlaying(true);
-                })
-                .catch(err => {
-                    console.error('❌ Play error:', err);
-                    console.error('Audio src:', audioRef.current?.src);
-                    console.error('Audio readyState:', audioRef.current?.readyState);
-                    console.error('Audio networkState:', audioRef.current?.networkState);
-                    toast.error('Failed to play audio');
-                    setIsPlaying(false);
-                });
-        }
-    };
-
-    const formatAudioTime = (seconds) => {
-        if (!seconds || isNaN(seconds)) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    const formatTime = (date) => {
-        return new Date(date).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-    };
-
-    if (isDeletedForEveryone) {
-        return (
-            <div className={`message ${isCurrentUser ? 'sent' : 'received'}`}>
-                <div className="message-bubble">
-                    <div className="message-content deleted">
-                        <i>🚫 This message was deleted</i>
-                    </div>
-                </div>
-            </div>
-        );
+  /* ---------- VOICE ---------- */
+  const togglePlayback = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(`${SERVER_URL}${message.fileUrl}`);
+      audioRef.current.addEventListener("loadedmetadata", () =>
+        setDuration(audioRef.current.duration)
+      );
+      audioRef.current.addEventListener("timeupdate", () =>
+        setCurrentTime(audioRef.current.currentTime)
+      );
+      audioRef.current.addEventListener("ended", () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      });
     }
 
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const formatTime = (t) => {
+    if (!t || isNaN(t)) return "0:00";
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  /* ---------- DELETED ---------- */
+  if (isDeletedForEveryone) {
     return (
-        <div className={`message ${isCurrentUser ? 'sent' : 'received'}`}>
-            <div className="message-wrapper">
-                {/* Three-dot menu */}
-                <div className="message-options" ref={optionsRef}>
-                    <button
-                        className="options-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowOptions(!showOptions);
-                        }}
-                    >
-                        ⋮
-                    </button>
-
-                    {showOptions && (
-                        <div
-                            className={`options-menu ${isCurrentUser ? 'menu-right' : 'menu-left'}`}>
-
-                            {/* FOR SENDER: Show Edit and Delete for Everyone (within time limits) */}
-                            {isCurrentUser && !isFile && canEdit() && (
-                                <button onClick={() => {
-                                    setIsEditing(true);
-                                    setShowOptions(false);
-                                }}>
-                                    ✏️ Edit
-                                </button>
-                            )}
-
-                            {isCurrentUser && canDelete() && (
-                                <button onClick={() => {
-                                    setDeleteType('forEveryone');
-                                    setShowDeleteModal(true);
-                                    setShowOptions(false);
-                                }}>
-                                    Delete for Everyone
-                                </button>
-                            )}
-
-                            {/* FOR EVERYONE: Show Delete for Me (always available) */}
-                            <button className='dlt-msg-btn' onClick={() => {
-                                setDeleteType('forMe');
-                                setShowDeleteModal(true);
-                                setShowOptions(false);
-                            }}>
-                                Delete for Me
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Message content */}
-                {isEditing ? (
-                    <div className="edit-mode">
-                        <input
-                            type="text"
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                            autoFocus
-                        />
-                        <button onClick={handleEdit}>Save</button>
-                        <button onClick={() => {
-                            setIsEditing(false);
-                            setEditContent(message.text);
-                        }}>Cancel</button>
-                    </div>
-                ) : (
-                    <div className="message-bubble">
-                        {isFile ? (
-                            <div className="file-message">
-                                {message.fileType?.startsWith('image/') ? (
-                                    <div className="image-preview">
-                                        <img
-                                            src={`${SERVER_URL}${message.fileUrl}`}
-                                            alt={message.fileName}
-                                            style={{
-                                                maxWidth: '200px',
-                                                maxHeight: '200px',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer'
-                                            }}
-                                            onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, '_blank')}
-                                        />
-                                    </div>
-                                ) : isVoice ? (
-                                    // Voice Message Player
-                                    <div className="voice-message-player">
-                                        <button
-                                            onClick={togglePlayback}
-                                            className="voice-play-button"
-                                        >
-                                            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                                        </button>
-
-                                        <div className="voice-progress-container">
-                                            <div className="voice-progress-bar">
-                                                <div
-                                                    className="voice-progress-fill"
-                                                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-                                                ></div>
-                                            </div>
-                                            <div className="voice-time">
-                                                {isPlaying ? formatAudioTime(currentTime) : formatAudioTime(duration)}
-                                            </div>
-                                        </div>
-
-                                        <Mic size={16} className="voice-mic-icon" />
-                                    </div>
-                                ) : (
-                                    // Regular File
-                                    <div className="file-info">
-                                        <div className="file-icon">📄</div>
-                                        <div className="file-details">
-                                            <div className="file-name">{message.fileName}</div>
-                                            <div className="file-size">{formatFileSize(message.fileSize)}</div>
-                                        </div>
-                                        <button
-                                            className="download-btn"
-                                            onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, '_blank')}
-                                        >
-                                            Download
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <>
-                                <p className="message-text">{message.text}</p>
-                                {message.isEdited && (
-                                    <span className="edited-tag">edited</span>
-                                )}
-                            </>
-                        )}
-
-                        <div className="message-time">
-                            {formatTime(message.createdAt || message.timestamp || new Date())}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Delete Modal */}
-            {showDeleteModal && (
-                <div className="delete-modal" onClick={() => {
-                    setShowDeleteModal(false);
-                    setDeleteType(null);
-                }}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Delete Message?</h3>
-                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '1rem' }}>
-                            {deleteType === 'forEveryone'
-                                ? 'This will remove the message for all participants.'
-                                : 'This will remove the message from your view only.'}
-                        </p>
-                        <button
-                            onClick={handleDeleteConfirm}
-                            style={{ background: '#e50914' }}
-                        >
-                            {deleteType === 'forEveryone' ? 'Delete for Everyone' : 'Delete for Me'}
-                        </button>
-                        <button onClick={() => {
-                            setShowDeleteModal(false);
-                            setDeleteType(null);
-                        }}>
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            )}
+      <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} my-2`}>
+        <div className="px-4 py-2 rounded-xl bg-gray-800 text-gray-400 text-xs italic">
+          🚫 This message was deleted
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} my-2`}>
+      <div ref={optionsRef} className="relative max-w-[75%] group">
+        {/* OPTIONS */}
+        <button
+          onClick={() => setShowOptions(!showOptions)}
+          className="absolute -top-2 -right-2 p-1 rounded-full bg-gray-900/80 opacity-0 group-hover:opacity-100 transition"
+        >
+          <MoreVertical size={14} />
+        </button>
+
+        {showOptions && (
+          <div className="absolute right-0 mt-2 bg-gray-900 rounded-xl shadow-xl text-sm z-50 overflow-hidden">
+            {isCurrentUser && !isFile && canEdit() && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="block px-4 py-2 hover:bg-gray-800 w-full text-left"
+              >
+                ✏️ Edit
+              </button>
+            )}
+            {isCurrentUser && canDelete() && (
+              <button
+                onClick={() => {
+                  setDeleteType("forEveryone");
+                  setShowDeleteModal(true);
+                }}
+                className="block px-4 py-2 hover:bg-gray-800 w-full text-left"
+              >
+                Delete for everyone
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setDeleteType("forMe");
+                setShowDeleteModal(true);
+              }}
+              className="block px-4 py-2 hover:bg-gray-800 w-full text-left text-red-400"
+            >
+              Delete for me
+            </button>
+          </div>
+        )}
+
+        {/* MESSAGE */}
+        {isEditing ? (
+          <div className="bg-gray-900 p-4 rounded-xl shadow">
+            <input
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full bg-gray-800 px-3 py-2 rounded-lg text-sm outline-none"
+            />
+            <div className="flex gap-2 mt-3 justify-end">
+              <button
+                onClick={handleEdit}
+                className="px-4 py-1.5 bg-blue-600 rounded-lg text-sm"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-1.5 bg-gray-700 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`rounded-2xl px-4 py-2 shadow-md text-sm ${
+              isCurrentUser
+                ? "bg-gradient-to-br from-blue-600 to-blue-500 text-white"
+                : "bg-gray-800 text-white"
+            }`}
+          >
+            {!isFile && !isVoice && <p>{message.text}</p>}
+
+            {isVoice && (
+              <div className="flex items-center gap-3 min-w-[220px]">
+                <button
+                  onClick={togglePlayback}
+                  className="p-2 rounded-full bg-black/20"
+                >
+                  {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                </button>
+
+                <div className="flex-1 h-1 bg-black/30 rounded">
+                  <div
+                    className="h-1 bg-green-400 rounded"
+                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                  />
+                </div>
+
+                <span className="text-xs opacity-80">
+                  {formatTime(isPlaying ? currentTime : duration)}
+                </span>
+
+                <Mic size={14} className="opacity-70" />
+              </div>
+            )}
+
+            {isFile && (
+              <button
+                onClick={() => window.open(`${SERVER_URL}${message.fileUrl}`, "_blank")}
+                className="underline text-sm"
+              >
+                📎 {message.fileName}
+              </button>
+            )}
+
+            <div className="text-[10px] opacity-70 text-right mt-1">
+              {new Date(message.createdAt || Date.now()).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+              })}
+              {message.isEdited && " • edited"}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* DELETE MODAL */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 p-6 rounded-2xl w-80 shadow-xl">
+            <h3 className="font-semibold mb-2">Delete message?</h3>
+            <p className="text-sm text-gray-400 mb-4">
+              {deleteType === "forEveryone"
+                ? "This message will be deleted for everyone."
+                : "This message will be deleted only for you."}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 bg-red-600 py-2 rounded-lg"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 bg-gray-700 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default MessageItem;

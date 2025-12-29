@@ -1,15 +1,24 @@
 import axios from "axios";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import io from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import { Authcntxt } from "../context/authcontext";
-import { useContext } from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, UserX, Trash2, Settings, LogOut, User, Mic, Play, Pause } from 'lucide-react';
+import {
+  MoreVertical,
+  UserX,
+  Trash2,
+  Settings,
+  LogOut,
+  User,
+  Mic,
+  Play,
+  Pause
+} from "lucide-react";
 import MessageItem from "./MessageItem";
+import EmojiPicker from "emoji-picker-react";
 import "react-toastify/dist/ReactToastify.css";
-import EmojiPicker from 'emoji-picker-react';
+
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Chat() {
@@ -21,6 +30,7 @@ export default function Chat() {
   const [onlineUsers, setOnlineusers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserList, setShowUserList] = useState(true);
+
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -28,20 +38,19 @@ export default function Chat() {
   const [searchResults, setSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
+
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Voice message playback states
   const [playingAudio, setPlayingAudio] = useState(null);
   const [audioDurations, setAudioDurations] = useState({});
   const [audioProgress, setAudioProgress] = useState({});
   const audioRefs = useRef({});
+
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingIntervalRef = useRef(null);
-
-  const { logout, user } = useContext(Authcntxt);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -73,13 +82,12 @@ export default function Chat() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const settingsMenuRef = useRef(null);
 
+  const { logout, user } = useContext(Authcntxt);
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-    }
+    if (!currentUser) navigate("/login");
   }, [currentUser, navigate]);
 
   const scrollToBottom = () => {
@@ -95,7 +103,6 @@ export default function Chat() {
       Notification.requestPermission();
     }
   }, []);
-
   const showBrowserNotification = (title, body, icon) => {
     if ("Notification" in window && Notification.permission === "granted") {
       const notification = new Notification(title, {
@@ -113,6 +120,11 @@ export default function Chat() {
       setTimeout(() => notification.close(), 5000);
     }
   };
+
+  const filteredFriends = friends.filter(friend =>
+    friend.Username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   useEffect(() => {
     const userInstorage = JSON.parse(localStorage.getItem("user"));
@@ -371,15 +383,15 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) {
-      setShowfrndMenu(null);
-    }
-  };
+    const handleClickOutside = (event) => {
+      if (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) {
+        setShowfrndMenu(null);
+      }
+    };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const searchUsers = async (query) => {
     if (!query.trim()) {
@@ -1112,530 +1124,370 @@ export default function Chat() {
     });
   };
 
-
-
-  const renderMessage = (msg) => {
-    const isFile = msg.fileUrl;
-    const isImage = isFile && msg.fileType?.startsWith('image/');
-    const isVoice = msg.isVoiceMessage || (msg.fileType && (msg.fileType.includes('audio') || msg.fileName?.includes('voice-')));
-    const isCurrentUser = msg.sender?.Username === currentUser?.Username;
-
-    return (
-      <div className={`message-bubble ${isCurrentUser ? 'sent' : 'received'}`}>
-        {isFile ? (
-          <div className="file-message">
-            {isImage ? (
-              <div className="image-preview">
-                <img
-                  src={`${SERVER_URL}${msg.fileUrl}`}
-                  alt={msg.fileName}
-                  style={{
-                    maxWidth: '200px',
-                    maxHeight: '200px',
-                    borderRadius: '8px',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => window.open(`${SERVER_URL}${msg.fileUrl}`, '_blank')}
-                />
-              </div>
-            ) : isVoice ? (
-              <div className="voice-message-player">
-                <button
-                  onClick={() => toggleAudioPlayback(msg._id, msg.fileUrl)}
-                  className="voice-play-button"
-                >
-                  {playingAudio === msg._id ? <Pause size={20} /> : <Play size={20} />}
-                </button>
-
-                <div className="voice-progress-container">
-                  <div className="voice-progress-bar">
-                    <div
-                      className="voice-progress-fill"
-                      style={{ width: `${audioDurations[msg._id] ? (audioProgress[msg._id] / audioDurations[msg._id]) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                  <div className="voice-time">
-                    {playingAudio === msg._id
-                      ? formatAudioTime(audioProgress[msg._id])
-                      : formatAudioTime(audioDurations[msg._id] || 0)}
-                  </div>
-                </div>
-
-                <Mic size={16} className="voice-mic-icon" />
-              </div>
-            ) : (
-              <div className="file-info">
-                <div className="file-icon">📄</div>
-                <div className="file-details">
-                  <div className="file-name">{msg.fileName}</div>
-                  <div className="file-size">{formatFileSize(msg.fileSize)}</div>
-                </div>
-                <button
-                  className="download-btn"
-                  onClick={() => window.open(`${SERVER_URL}${msg.fileUrl}`, '_blank')}
-                >
-                  Download
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="message-text">{msg.text}</p>
-        )}
-
-        <div className="message-time">
-          {formatTime(msg.createdAt || msg.timestamp || new Date())}
-        </div>
-      </div>
-    );
-  };
-
-  const filteredFriends = friends.filter(friend =>
-    friend.Username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="whatsapp-container">
-      {notifications.map((notif, index) => (
-        <div key={index} className="browser-notification" onClick={() => {
-          const sender = friends.find(f => f._id === notif.sender?._id);
-          if (sender) loadPrivateChat(sender);
-          setNotifications(prev => prev.filter(n => n !== notif));
-        }}>
-          <div className="notification-header">
-            <div className="notification-avatar">
-              {notif.sender?.profilePicture ? (
-                <img
-                  src={notif.sender.profilePicture.startsWith('http')
-                    ? notif.sender.profilePicture
-                    : `${SERVER_URL}${notif.sender.profilePicture}`
-                  }
-                  alt={notif.sender.Username}
-                  onLoad={() => console.log('✅ Image loaded:', notif.sender.profilePicture)}
-                  onError={(e) => {
-                    console.error('❌ Image error:', e.target.src);
-                    e.target.style.display = 'none';
-                    e.target.parentElement.textContent = notif.sender.Username?.[0] || '?';
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: '50%'
-                  }}
-                />
-              ) : (
-                notif.sender?.Username?.[0] || '?'
-              )}
-            </div>
-            <div className="notification-title">Chatify</div>
-          </div>
-          <div className="notification-body">
-            <strong>{notif.sender?.Username}:</strong> {notif.message}
-          </div>
-        </div>
-      ))}
+    <div className="flex h-screen overflow-hidden text-white">
 
-      <div className={`sidebar ${!showUserList ? 'hidden' : ''}`}>
-        <div className="sidebar-header">
-          <div className="profile-pic" onClick={() => navigate('/edit-profile')}>
-            {currentUser?.profilePicture ? (
-              <img
-                src={currentUser.profilePicture.startsWith('http')
-                  ? currentUser.profilePicture
-                  : `${SERVER_URL}${currentUser.profilePicture}`
-                }
-                alt={currentUser.Username}
-              />
-            ) : (
-              currentUser?.Username?.[0] || 'U'
-            )}
+
+      {/* ===================== SIDEBAR ===================== */}
+      <div
+        className={`fixed md:static inset-y-0 left-0 z-40
+  w-full md:w-80 bg-gray-900 border-r border-gray-800
+  flex flex-col transition-transform duration-300
+  ${!showUserList ? "-translate-x-full md:translate-x-0" : "translate-x-0"}`}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-800">
+          <div
+            onClick={() => navigate("/edit-profile")}
+            className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold cursor-pointer"
+          >
+            {currentUser?.Username?.[0] || "U"}
           </div>
-          <div className="user-info">
-            <h4 className="user-name">{currentUser?.Username || 'User'}</h4>
-            <p className="user-status">Online</p>
+
+          <div className="flex-1">
+            <p className="font-semibold">
+              {currentUser?.Username || "User"}
+            </p>
+            <p className="text-xs text-green-400">Online</p>
           </div>
+
+          {/* Add Friend */}
           <button
-            className="chat-actions-btn"
             onClick={() => setShowSearch(!showSearch)}
+            className="p-2 rounded-lg hover:bg-gray-800 text-xl"
             title="Add Friend"
-            style={{
-              color: 'white',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}
           >
             +
           </button>
-          <div ref={settingsMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
+
+          {/* Settings */}
+          <div ref={settingsMenuRef} className="relative">
             <button
-              className="chat-actions-btn"
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-              title="Settings"
-              style={{
-                color: 'white',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="p-2 rounded-lg hover:bg-gray-800"
             >
-              <Settings size={20} />
+              <Settings size={18} />
             </button>
 
             {showSettingsMenu && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '0.5rem',
-                minWidth: '180px',
-                background: '#2a2a2a',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                zIndex: 9999,
-                overflow: 'hidden'
-              }}>
+              <div className="absolute right-0 mt-2 w-44 bg-gray-800 rounded-lg shadow-lg overflow-hidden z-50">
                 <button
                   onClick={() => {
-                    navigate('/edit-profile');
+                    navigate("/edit-profile");
                     setShowSettingsMenu(false);
                   }}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'white',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-700 flex gap-2 items-center"
                 >
-                  <User size={18} />
-                  Edit Profile
+                  <User size={16} /> Edit Profile
                 </button>
 
-                {currentUser?.role === 'Admin' && (
+                {currentUser?.role === "Admin" && (
                   <button
                     onClick={() => {
-                      navigate('/admin');
+                      navigate("/admin");
                       setShowSettingsMenu(false);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'white',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-700 flex gap-2 items-center"
                   >
-                    <Settings size={18} />
-                    Admin Panel
+                    <Settings size={16} /> Admin Panel
                   </button>
                 )}
 
                 <button
                   onClick={handleLogout}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'white',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-red-600 flex gap-2 items-center text-red-400"
                 >
-                  <LogOut size={18} />
-                  Logout
+                  <LogOut size={16} /> Logout
                 </button>
               </div>
             )}
           </div>
         </div>
 
+        {/* ADD FRIEND SEARCH PANEL */}
         {showSearch && (
-          <div className="search-panel">
+          <div className="px-4 py-3 border-b border-gray-800 bg-gray-900">
             <input
               type="text"
-              placeholder="Search users..."
-              className="search-input"
+              placeholder="Search users by username..."
               onChange={(e) => searchUsers(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 outline-none text-sm mb-3"
+              autoFocus
             />
-            <div className="search-results">
-              {searchResults.map(user => {
-                const isAlreadyFriend = friends.some(f => f._id === user._id);
-                const requestSent = sentRequests.some(r => r.receiver._id === user._id);
 
-                return (
-                  <div key={user._id} className="search-result-item">
-                    <div className="user-avatar">
-                      {user.profilePicture ? (
-                        <img
-                          src={user.profilePicture.startsWith('http')
-                            ? user.profilePicture
-                            : `${SERVER_URL}${user.profilePicture}`
-                          }
-                          alt={user.Username}
-                        />
+            {searchResults.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center">
+                No users found
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {searchResults.map((u) => {
+                  const alreadyFriend = friends.some(f => f._id === u._id);
+                  const alreadySent = sentRequests.some(r => r.receiver?._id === u._id);
+
+                  return (
+                    <div
+                      key={u._id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-semibold">
+                          {u.Username[0]}
+                        </div>
+                        <span className="text-sm">{u.Username}</span>
+                      </div>
+
+                      {alreadyFriend ? (
+                        <span className="text-xs text-green-400">Friend</span>
+                      ) : alreadySent ? (
+                        <span className="text-xs text-yellow-400">Requested</span>
                       ) : (
-                        user.Username[0]
+                        <button
+                          onClick={() => sendFriendRequest(u._id)}
+                          className="text-xs px-3 py-1 bg-blue-600 rounded-full hover:bg-blue-700"
+                        >
+                          Add
+                        </button>
                       )}
                     </div>
-                    <span>{user.Username}</span>
-                    {isAlreadyFriend ? (
-                      <button className="btn-disabled" disabled>Friends</button>
-                    ) : requestSent ? (
-                      <button className="btn-disabled" disabled>Sent</button>
-                    ) : (
-                      <button
-                        className="btn-add"
-                        onClick={() => sendFriendRequest(user._id)}
-                      >
-                        Add
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                setShowSearch(false);
+                setSearchResults([]);
+              }}
+              className="mt-3 w-full text-xs text-gray-400 hover:underline"
+            >
+              Close
+            </button>
           </div>
         )}
 
+
+        {/* Search Friends */}
+        <div className="p-3">
+          <input
+            type="text"
+            placeholder="Search friends"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg bg-gray-800 outline-none text-sm"
+          />
+        </div>
+
+        {/* FRIEND REQUESTS */}
         {pendingRequests.length > 0 && (
-          <div className="friend-requests">
-            <h4>Friend Requests ({pendingRequests.length})</h4>
-            {pendingRequests.map(req => (
-              <div key={req._id} className="request-item">
-                <div className="user-avatar">
-                  {req.sender.profilePicture ? (
-                    <img
-                      src={req.sender.profilePicture.startsWith('http')
-                        ? req.sender.profilePicture
-                        : `${SERVER_URL}${req.sender.profilePicture}`
-                      }
-                      alt={req.sender.Username}
-                    />
-                  ) : (
-                    req.sender.Username[0]
-                  )}
-                </div>
-                <div className="request-info">
-                  <span>{req.sender.Username}</span>
-                  <div className="request-actions">
+          <div className="px-4 py-3 border-b border-gray-800 bg-gray-900">
+            <h3 className="text-sm font-semibold text-gray-300 mb-2">
+              Friend Requests
+            </h3>
+
+            <div className="space-y-2">
+              {pendingRequests.map((req) => (
+                <div
+                  key={req._id}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-semibold">
+                      {req.sender.Username[0]}
+                    </div>
+                    <span className="text-sm">{req.sender.Username}</span>
+                  </div>
+
+                  <div className="flex gap-2">
                     <button
-                      className="btn-accept"
                       onClick={() => acceptFriendRequest(req._id, req.sender)}
+                      className="px-3 py-1 text-xs bg-green-600 rounded hover:bg-green-700"
                     >
                       Accept
                     </button>
+
                     <button
-                      className="btn-reject"
                       onClick={() => rejectFriendRequest(req._id, req.sender._id)}
+                      className="px-3 py-1 text-xs bg-red-600 rounded hover:bg-red-700"
                     >
                       Reject
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Search friends"
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
 
-        <div className="users-list">
+        {/* Friends List */}
+        <div className="flex-1 overflow-y-auto">
           {filteredFriends.length === 0 ? (
-            <div className="no-friends">
+            <div className="text-center text-gray-500 mt-10">
               <p>No friends yet</p>
-              <p>Add friends to start chatting!</p>
+              <p className="text-sm">Add friends to start chatting</p>
             </div>
           ) : (
-            filteredFriends.map(friend => (
-              <div key={friend._id} className="user-item" style={{ position: 'relative' }}>
-                <div onClick={() => loadPrivateChat(friend)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                  <div className="user-avatar">
-                    {friend.profilePicture ? (
-                      <img
-                        src={friend.profilePicture.startsWith('http')
-                          ? friend.profilePicture
-                          : `${SERVER_URL}${friend.profilePicture}`
-                        }
-                        alt={friend.Username}
-                      />
-                    ) : (
-                      friend.Username[0]
-                    )}
-                    {onlineUsers.includes(friend._id) && (
-                      <div className="online-indicator"></div>
-                    )}
+            filteredFriends.map((friend) => (
+              <div
+                key={friend._id}
+                className="relative flex items-center gap-3 px-4 py-3 hover:bg-gray-800 cursor-pointer"
+                onClick={(e) => {
+                  if (ShowfrndMenu) return;
+                  loadPrivateChat(friend);
+                }}
+              >
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-semibold">
+                    {friend.Username[0]}
                   </div>
-                  <div className="user-info">
-                    <h4 className="user-name">{friend.Username}</h4>
-                    <p className="user-status">
-                      {blockedUser.includes(friend._id)
-                        ? "Blocked"
-                        : onlineUsers.includes(friend._id) ? "Online" : "Offline"
-                      }
-                    </p>
-                  </div>
-                </div>
 
-                <div className="frnd-actions" ref={chatMenuRef}>
-                  <button className="frnd-actions-btn" onClick={(e) => {
-                    e.stopPropagation();
-                    setShowfrndMenu(ShowfrndMenu === friend._id ? null : friend._id);
-                  }}>
-                    <MoreVertical size={20} />
-                  </button>
-
-                  {ShowfrndMenu === friend._id && (
-                    <div className="frnd-menu">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          unfriendUser(friend._id);
-                          setShowfrndMenu(null);
-                        }}>
-                        Remove
-                      </button>
-                    </div>
+                  {onlineUsers.includes(friend._id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900" />
                   )}
                 </div>
+
+                <div className="flex-1">
+                  <p className="font-medium">{friend.Username}</p>
+                  <p className="text-xs text-gray-400">
+                    {blockedUser.includes(friend._id)
+                      ? "Blocked"
+                      : onlineUsers.includes(friend._id)
+                        ? "Online"
+                        : "Offline"}
+                  </p>
+                </div>
+
+                {/* Friend Menu */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowfrndMenu(
+                      ShowfrndMenu === friend._id ? null : friend._id
+                    );
+                  }}
+                  className="p-2 rounded hover:bg-gray-700"
+                >
+                  <MoreVertical size={18} />
+                </button>
+
+                {ShowfrndMenu === friend._id && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-4 top-14 bg-gray-800 rounded-lg shadow-xl z-[100]"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        unfriendUser(friend._id);
+                        setShowfrndMenu(null);
+                      }}
+                      className="px-4 py-2 text-red-400 hover:bg-gray-700 w-full text-left"
+                    >
+                      Remove Friend
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           )}
         </div>
       </div>
-
-      <div className="main-chat">
+      {/* ===================== END SIDEBAR ===================== */}
+      {/* ===================== MAIN CHAT ===================== */}
+      <div className="flex-1 flex flex-col bg-gray-950">
         {!activeUser ? (
-          <div className="no-chat-selected">
-            <div className="empty-state">
-              <h2>Start a New Chat</h2>
-              <p>Select a friend from the sidebar to start messaging</p>
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold mb-2">Start a New Chat</h2>
+              <p>Select a friend from the sidebar</p>
               {friends.length === 0 && (
-                <p>Add friends using the + button to begin chatting!</p>
+                <p className="text-sm mt-2">
+                  Add friends using the + button
+                </p>
               )}
             </div>
           </div>
         ) : (
           <>
-            <div className="chat-header">
+            {/* Chat Header */}
+            <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
               {!showUserList && (
                 <button
-                  className="back-btn"
+                  className="md:hidden text-xl"
                   onClick={() => setShowUserList(true)}
                 >
                   ←
                 </button>
               )}
 
-              <div className="profile-pic">
-                {activeUser.profilePicture ? (
-                  <img
-                    src={activeUser.profilePicture.startsWith('http')
-                      ? activeUser.profilePicture
-                      : `${SERVER_URL}${activeUser.profilePicture}`
-                    }
-                    alt={activeUser.Username}
-                  />
-                ) : (
-                  activeUser.Username[0]
-                )}
+              <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-semibold">
+                {activeUser.Username[0]}
               </div>
 
-              <div className="chat-info">
-                <h3 className="chat-name">
+              <div className="flex-1">
+                <p className="font-semibold">
                   {activeUser.Username}
                   {blockedUser.includes(activeUser._id) && (
-                    <span style={{
-                      marginLeft: '0.5rem',
-                      fontSize: '0.75rem',
-                      padding: '0.2rem 0.5rem',
-                      background: 'var(--danger)',
-                      borderRadius: '4px',
-                      fontWeight: '500'
-                    }}>
+                    <span className="ml-2 text-xs px-2 py-0.5 bg-red-600 rounded">
                       Blocked
                     </span>
                   )}
-                </h3>
-                <p className="chat-status">
+                </p>
+                <p className="text-xs text-gray-400">
                   {blockedUser.includes(activeUser._id)
-                    ? 'You blocked this user'
-                    : onlineUsers.includes(activeUser._id) ? 'Online' : 'Offline'
-                  }
+                    ? "You blocked this user"
+                    : onlineUsers.includes(activeUser._id)
+                      ? "Online"
+                      : "Offline"}
                 </p>
               </div>
 
-              <div className="chat-actions" ref={chatMenuRef} style={{ position: 'relative' }}>
-                <button onClick={() => setShowChatMenu(!ShowChatMenu)}>
-                  <MoreVertical size={20} />
+              {/* Chat Menu */}
+              <div className="relative" ref={chatMenuRef}>
+                <button
+                  onClick={() => setShowChatMenu(!ShowChatMenu)}
+                  className="p-2 rounded hover:bg-gray-800"
+                >
+                  <MoreVertical size={18} />
                 </button>
 
                 {ShowChatMenu && (
-                  <div className="options-menu menu-right" style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: '0.5rem',
-                    minWidth: '180px'
-                  }}>
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-50">
                     {blockedUser.includes(activeUser._id) ? (
-                      <button onClick={() => UnblockUser(activeUser._id)}>
-                        <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
-                        Unblock User
+                      <button
+                        onClick={() => UnblockUser(activeUser._id)}
+                        className="w-full px-4 py-2 hover:bg-gray-700 flex gap-2 items-center"
+                      >
+                        <UserX size={16} /> Unblock User
                       </button>
                     ) : (
-                      <button onClick={() => BlockUser(activeUser._id)}>
-                        <UserX size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
-                        Block User
+                      <button
+                        onClick={() => BlockUser(activeUser._id)}
+                        className="w-full px-4 py-2 hover:bg-gray-700 flex gap-2 items-center"
+                      >
+                        <UserX size={16} /> Block User
                       </button>
                     )}
-                    <button onClick={ClearChat}>
-                      <Trash2 size={16} style={{ marginRight: '0.5rem', display: 'inline' }} />
-                      Clear Chat
+
+                    <button
+                      onClick={ClearChat}
+                      className="w-full px-4 py-2 hover:bg-gray-700 flex gap-2 items-center text-red-400"
+                    >
+                      <Trash2 size={16} /> Clear Chat
                     </button>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="messages-area">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
               {privateMessage.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
+                <p className="text-center text-gray-500 mt-10">
+                  No messages yet. Start the conversation!
+                </p>
               ) : (
                 privateMessage.map((msg, index) => (
                   <MessageItem
@@ -1643,188 +1495,117 @@ export default function Chat() {
                     message={msg}
                     currentUser={currentUser}
                     onMessageUpdate={(updatedMsg) => {
-                      setPrivateMessage(prev => prev.map(m =>
-                        m._id === updatedMsg._id ? updatedMsg : m
-                      ));
+                      setPrivateMessage(prev =>
+                        prev.map(m =>
+                          m._id === updatedMsg._id ? updatedMsg : m
+                        )
+                      );
                     }}
                     onMessageDelete={(messageId) => {
-                      setPrivateMessage(prev => prev.filter(m => m._id !== messageId));
+                      setPrivateMessage(prev =>
+                        prev.filter(m => m._id !== messageId)
+                      );
                     }}
                   />
                 ))
               )}
 
-              {isUploading && (
-                <div className="upload-progress">
-                  <div className="upload-info">
-                    <span>Uploading... {uploadProgress}%</span>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {typingPrivate.length > 0 && (
-                <div className="typing-indicator">
-                  <div className="typing-bubble">
-                    <div className="typing-dots">
-                      <div className="typing-dot"></div>
-                      <div className="typing-dot"></div>
-                      <div className="typing-dot"></div>
-                    </div>
-                  </div>
+                <div className="text-sm text-gray-400">
+                  {typingPrivate.join(", ")} typing...
                 </div>
               )}
 
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="message-input-area">
+            {/* Message Input */}
+            <div className="border-t border-gray-800 bg-gray-900 px-3 py-2">
               {blockedUser.includes(activeUser._id) ? (
-                <div style={{
-                  padding: '1rem',
-                  textAlign: 'center',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  borderRadius: 'var(--radius)',
-                  margin: '1rem'
-                }}>
-                  <p style={{ color: 'var(--danger)', fontWeight: '500' }}>
-                    You have blocked this user. Unblock to send messages.
-                  </p>
+                <div className="text-center text-red-400 py-3">
+                  You blocked this user. Unblock to send messages.
                 </div>
               ) : (
-                <>
-                  {/* Recording Indicator */}
-                  {isRecording && (
-                    <div style={{
-                      padding: '1rem',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      borderRadius: '8px',
-                      margin: '0 1rem 0.5rem 1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      animation: 'pulse 1.5s ease-in-out infinite'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        color: 'var(--danger)',
-                        fontWeight: '500'
-                      }}>
-                        <div style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          background: 'var(--danger)',
-                          animation: 'blink 1s ease-in-out infinite'
-                        }}></div>
-                        Recording...
-                      </div>
-                      <div style={{
-                        marginLeft: 'auto',
-                        fontSize: '1.1rem',
-                        fontWeight: '600',
-                        color: 'var(--danger)',
-                        fontFamily: 'monospace'
-                      }}>
-                        {formatRecordingTime(recordingDuration)}
-                      </div>
-                    </div>
-                  )}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
 
-                  <div className="message-input-container">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      style={{ display: 'none' }}
-                      accept="*/*"
-                    />
+                  <button
+                    onClick={triggerFileUpload}
+                    disabled={isUploading || isRecording}
+                    className="p-2 rounded hover:bg-gray-800"
+                  >
+                    📎
+                  </button>
+
+                  <input
+                    type="text"
+                    placeholder={
+                      isRecording
+                        ? "Recording voice..."
+                        : isUploading
+                          ? "Uploading..."
+                          : "Type a message"
+                    }
+                    value={message}
+                    onChange={handleInput}
+                    onKeyPress={handleKeyPress}
+                    disabled={isUploading || isRecording}
+                    className="flex-1 px-4 py-2 rounded-full bg-gray-800 outline-none text-sm"
+                  />
+
+                  <div className="relative" ref={emojiPickerRef}>
                     <button
-                      className="input-action-btn"
-                      onClick={triggerFileUpload}
-                      disabled={isUploading || isRecording}
-                      title="Upload file"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="p-2 rounded hover:bg-gray-800"
+                      disabled={isRecording}
                     >
-                      {isUploading ? '⏳' : '📎'}
+                      😊
                     </button>
 
-                    <input
-                      type="text"
-                      placeholder={isRecording ? "Recording voice message..." : isUploading ? "Uploading file..." : "Type a message"}
-                      value={message}
-                      onChange={handleInput}
-                      onKeyPress={handleKeyPress}
-                      className="message-input"
-                      disabled={isUploading || isRecording}
-                    />
-
-                    <div ref={emojiPickerRef} style={{ position: 'relative' }}>
-                      <button
-                        className="input-action-btn"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        type="button"
-                        disabled={isRecording}
-                      >
-                        😊
-                      </button>
-
-                      {showEmojiPicker && (
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '100%',
-                          right: 0,
-                          marginBottom: '0.5rem',
-                          zIndex: 1000
-                        }}>
-                          <EmojiPicker
-                            onEmojiClick={handleEmojiClick}
-                            width={350}
-                            height={400}
-                            theme="dark"
-                            searchDisabled
-                            skinTonesDisabled
-                            previewConfig={{ showPreview: false }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {message.trim() ? (
-                      <button
-                        onClick={sendMessage}
-                        className="send-btn"
-                        disabled={isUploading || isRecording}
-                      >
-                        ➤
-                      </button>
-                    ) : (
-                      <button
-                        className="input-action-btn"
-                        onClick={handleMicClick}
-                        disabled={isUploading}
-                        style={{
-                          background: isRecording ? 'var(--danger)' : 'transparent',
-                          color: isRecording ? 'white' : 'var(--text-primary)'
-                        }}
-                        title={isRecording ? "Click to send" : "Record voice message"}
-                      >
-                        <Mic size={20} />
-                      </button>
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-full right-0 mb-2 z-50">
+                        <EmojiPicker
+                          onEmojiClick={handleEmojiClick}
+                          width={300}
+                          height={350}
+                          theme="dark"
+                          searchDisabled
+                          skinTonesDisabled
+                          previewConfig={{ showPreview: false }}
+                        />
+                      </div>
                     )}
                   </div>
-                </>
+
+                  {message.trim() ? (
+                    <button
+                      onClick={sendMessage}
+                      disabled={isUploading || isRecording}
+                      className="px-4 py-2 bg-blue-600 rounded-full"
+                    >
+                      ➤
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleMicClick}
+                      disabled={isUploading}
+                      className={`p-2 rounded-full ${isRecording ? "bg-red-600" : "hover:bg-gray-800"
+                        }`}
+                    >
+                      <Mic size={18} />
+                    </button>
+                  )}
+                </div>
               )}
 
               <button
                 onClick={leavePrivateChat}
-                className="leave-btn"
+                className="mt-2 text-xs text-gray-400 hover:underline"
               >
                 Back to chats
               </button>
@@ -1835,3 +1616,4 @@ export default function Chat() {
     </div>
   );
 }
+
