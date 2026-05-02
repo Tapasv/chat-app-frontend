@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { MessageCircle, Lock } from "lucide-react";
-import apiauth from "../apiauth";
+import apiauth from "../../../../rest/apiauth";
 import "react-toastify/dist/ReactToastify.css";
+import { Authcntxt } from "../../context/authcontext";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");

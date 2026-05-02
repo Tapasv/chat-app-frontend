@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
-import { apiadmin } from "../apiadmin";
+import { apiadmin } from "../lib/api/apiadmin";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { Authcntxt } from "../context/authcontext";
 import { LogOut, MessageCircle, Trash2, Settings } from "lucide-react";
-import "react-toastify/dist/ReactToastify.css";
+import api from '../lib/axios';
+// import "react-toastify/dist/ReactToastify.css";
+import { Authcntxt } from "../context/authcontext";
 
 const Adminpanel = () => {
   const [user, setUser] = useState([]);
@@ -20,30 +21,28 @@ const Adminpanel = () => {
 
   const getuser = async () => {
     try {
-      setLoading(true);
-      const res = await apiadmin.get("/user");
-      setUser(res.data || []);
+        setLoading(true);
+        const data = await api.get('/api/admin/user');
+        setUser(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load users");
+        console.error(err);
+        toast.error('Failed to load users');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const deleteuser = async (id, username) => {
-    if (!window.confirm(`Are you sure you want to delete user: ${username}?`))
-      return;
-
+    if (!window.confirm(`Delete user: ${username}?`)) return;
     try {
-      await apiadmin.delete(`/user/${id}`);
-      getuser();
-      toast.success(`User ${username} deleted successfully`);
+        await api.delete(`/api/admin/user/${id}`);
+        getuser();
+        toast.success(`User ${username} deleted`);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to delete user");
+        console.error(err);
+        toast.error('Failed to delete user');
     }
-  };
+};
 
   useEffect(() => {
     getuser();

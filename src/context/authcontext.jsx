@@ -1,96 +1,92 @@
-import { useState, createContext, useEffect } from "react";
-import axios from "axios";
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+import { useState, createContext, useEffect } from 'react';
+import { authApi } from '../lib/api/auth.api';
+import api from '../lib/axios';
 
 export const Authcntxt = createContext();
 
 export const Authprovider = ({ children }) => {
-    const [user, setuser] = useState(null);
-    const [accessToken, setaccessToken] = useState(null);
+    const [user, setUser] = useState(null);
+    const [accessToken, setAccessToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const clearAuth = () => {
+        setUser(null);
+        setAccessToken(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+    };
+
     const validateToken = async () => {
-        const token = localStorage.getItem("accessToken");
-        const savedUser = localStorage.getItem("user");
-        
-        if (!token || !savedUser) {
+        const token = localStorage.getItem('accessToken');
+        const savedUser = localStorage.getItem('user');
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (!savedUser) {
             setIsLoading(false);
-            return false;
+            return;
         }
 
-        // Add timeout to prevent infinite loading
-        const timeoutId = setTimeout(() => {
-            console.error("Token validation timeout");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("user");
-            localStorage.removeItem("refreshToken");
-            setuser(null);
-            setaccessToken(null);
-            setIsLoading(false);
-        }, 10000); // 10 second timeout
-
-        try {
-            const response = await axios.get(`${SERVER_URL}/api/auth/validate`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (response.data.valid) {
-                setuser(JSON.parse(savedUser));
-                setaccessToken(token);
-                setIsLoading(false);
-                return true;
-            } else {
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("user");
-                localStorage.removeItem("refreshToken");
-                setuser(null);
-                setaccessToken(null);
-                setIsLoading(false);
-                return false;
+        // Try access token first
+        if (token) {
+            try {
+                const data = await authApi.validate();
+                if (data?.valid) {
+                    setUser(JSON.parse(savedUser));
+                    setAccessToken(token);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch {
+                // Access token failed — try refresh
             }
-        } catch (error) {
-            clearTimeout(timeoutId);
-            console.log("Token validation failed:", error.message);
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("user");
-            localStorage.removeItem("refreshToken");
-            setuser(null);
-            setaccessToken(null);
-            setIsLoading(false);
-            return false;
         }
+
+        // Access token missing or expired — try refresh token
+        if (refreshToken) {
+            try {
+                const res = await api.post('/api/auth/refresh', { refreshToken });
+                const newToken = res?.accessToken || res;
+
+                if (newToken) {
+                    localStorage.setItem('accessToken', newToken);
+                    setUser(JSON.parse(savedUser));
+                    setAccessToken(newToken);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch {
+                // Refresh also failed — clear everything
+            }
+        }
+
+        clearAuth();
+        setIsLoading(false);
     };
 
     useEffect(() => {
         validateToken();
     }, []);
 
-    const login = (saveduser, token, refreshToken) => {
-        setuser(saveduser);
-        setaccessToken(token);
-        localStorage.setItem('user', JSON.stringify(saveduser));
+    const login = (savedUser, token, refreshToken) => {
+        setUser(savedUser);
+        setAccessToken(token);
+        localStorage.setItem('user', JSON.stringify(savedUser));
         localStorage.setItem('accessToken', token);
         localStorage.setItem('refreshToken', refreshToken);
     };
 
     const logout = async () => {
         try {
-            const refreshToken = localStorage.getItem("refreshToken");
+            const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
-                await axios.post(`${SERVER_URL}/api/auth/logout`, { refreshToken });
+                await authApi.logout(refreshToken);
             }
-        } catch (error) {
-            console.error("Logout error:", error);
+        } catch {
+            // Logout locally even if server fails
+        } finally {
+            clearAuth();
         }
-        
-        setuser(null);
-        setaccessToken(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
     };
 
     return (
