@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { MessageCircle, Lock } from "lucide-react";
-import apiauth from "../../../../rest/apiauth";
+import { authApi } from "../../lib/api/auth.api";
 import "react-toastify/dist/ReactToastify.css";
 import { Authcntxt } from "../../context/authcontext";
 
