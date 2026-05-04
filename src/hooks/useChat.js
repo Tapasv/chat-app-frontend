@@ -35,6 +35,17 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
         loadMessages();
     }, [activeUser?._id]);
 
+    // Mark messages as read when opening a chat
+    useEffect(() => {
+        if (!activeUser || !currentUserId || !socketRef.current) return;
+
+        const socket = socketRef.current;
+        socket.emit('markAsRead', {
+            senderId: activeUser._id,
+            receiverId: currentUserId
+        });
+    }, [activeUser?._id]);
+
     useEffect(() => {
         if (!activeUser) activeUserRef.current = null;
     }, [activeUser]);
@@ -68,10 +79,8 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
                 if (!isRelevant) return;
 
                 setMessages(prev => {
-                    // Dedup by real _id
                     if (prev.some(m => m._id === data._id)) return prev;
 
-                    // Replace optimistic message by tempId if server echoes it back
                     if (data.tempId) {
                         const idx = prev.findIndex(m => m._id === data.tempId);
                         if (idx !== -1) {
@@ -81,8 +90,6 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
                         }
                     }
 
-                    // For sender's own messages: replace any optimistic temp message
-                    // that matches by text + sender (fallback if tempId not returned by server)
                     if (data.sender._id === currentId) {
                         const idx = prev.findIndex(
                             m => m.isOptimistic && m.text === data.text && m.sender._id === currentId
@@ -92,6 +99,14 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
                             next[idx] = data;
                             return next;
                         }
+                    }
+
+                    // Auto mark as read if this chat is currently open
+                    if (data.sender._id === activeId && socket) {
+                        socket.emit('markAsRead', {
+                            senderId: activeId,
+                            receiverId: currentId
+                        });
                     }
 
                     return [...prev, data];
@@ -129,11 +144,25 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
                 setTypingUsers(prev => prev.filter(u => u !== username));
             };
 
+            // When receiver reads your messages — mark all your sent messages as read
+            const handleMessagesRead = ({ by, at }) => {
+                setMessages(prev =>
+                    prev.map(m =>
+                        m.sender._id === currentUserIdRef.current &&
+                        m.receiver._id === by &&
+                        !m.readAt
+                            ? { ...m, readAt: at }
+                            : m
+                    )
+                );
+            };
+
             socket.on('receivePrivateMessage', handleReceiveMessage);
             socket.on('messageEdited', handleMessageEdited);
             socket.on('messageDeleted', handleMessageDeleted);
             socket.on('UserTypingPrivate', handleTyping);
             socket.on('UserStopTypingPrivate', handleStopTyping);
+            socket.on('messagesRead', handleMessagesRead);
 
             cleanup = () => {
                 socket.off('receivePrivateMessage', handleReceiveMessage);
@@ -141,6 +170,7 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
                 socket.off('messageDeleted', handleMessageDeleted);
                 socket.off('UserTypingPrivate', handleTyping);
                 socket.off('UserStopTypingPrivate', handleStopTyping);
+                socket.off('messagesRead', handleMessagesRead);
                 listenersAttached.current = false;
             };
             return true;
@@ -156,7 +186,6 @@ export const useChat = (activeUser, currentUserId, socketRef, blockedUsers) => {
         return () => cleanup?.();
     }, []);
 
-    // Called by MessageInput to instantly show message before server echo
     const addOptimisticMessage = useCallback((msg) => {
         setMessages(prev => [...prev, msg]);
     }, []);

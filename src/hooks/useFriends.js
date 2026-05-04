@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { friendApi } from '../lib/api/friend.api';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 export const useFriends = (socketRef) => {
     const [friends, setFriends] = useState([]);

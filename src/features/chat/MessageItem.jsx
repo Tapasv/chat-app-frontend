@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Play, Pause, Mic, MoreVertical } from 'lucide-react';
 import { chatApi } from '../../lib/api/chat.api';
 
@@ -207,11 +207,10 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                             </div>
                         </div>
                     ) : (
-                        <div className={`rounded-lg px-3.5 py-2.5 text-sm shadow-sm ${
-                            isCurrentUser
+                        <div className={`rounded-lg px-3.5 py-2.5 text-sm shadow-sm ${isCurrentUser
                                 ? 'bg-accent text-white rounded-br-sm'
                                 : 'bg-elevated border border-border text-text-primary rounded-bl-sm'
-                        }`}>
+                            }`}>
 
                             {/* Text message */}
                             {!isFile && !isVoice && (
@@ -223,9 +222,8 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                 <div className="flex items-center gap-2.5 min-w-[200px]">
                                     <button
                                         onClick={togglePlayback}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                                            isCurrentUser ? 'bg-white/20 hover:bg-white/30' : 'bg-accent/20 hover:bg-accent/30'
-                                        }`}
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isCurrentUser ? 'bg-white/20 hover:bg-white/30' : 'bg-accent/20 hover:bg-accent/30'
+                                            }`}
                                     >
                                         {isPlaying ? <Pause size={14} /> : <Play size={14} />}
                                     </button>
@@ -263,6 +261,22 @@ const MessageItem = ({ message, currentUser, onMessageUpdate, onMessageDelete })
                                     {msgTime}
                                     {message.isEdited && ' · edited'}
                                 </span>
+                                {isCurrentUser && (
+                                    <span className="flex-shrink-0">
+                                        {message.readAt ? (
+                                            // Double tick — read (both ticks colored)
+                                            <svg width="14" height="10" viewBox="0 0 16 10" fill="none">
+                                                <path d="M1 5L5 9L11 1" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M5 5L9 9L15 1" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        ) : (
+                                            // Single tick — delivered (one tick, dimmer)
+                                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                                <path d="M1 5L4 8L9 1" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        )}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}

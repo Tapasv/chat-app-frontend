@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import api from '../../lib/axios';
 import { Authcntxt } from '../../context/authcontext';
 import { User, Mail, Lock, Check, ArrowLeft, Eye, EyeOff, Camera } from 'lucide-react';

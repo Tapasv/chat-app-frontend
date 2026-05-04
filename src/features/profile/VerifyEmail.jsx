@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from 'sonner';
 import axios from "axios";
 import {
   MailCheck,
@@ -8,7 +8,6 @@ import {
   Loader2,
   ArrowRight
 } from "lucide-react";
-import "react-toastify/dist/ReactToastify.css";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 

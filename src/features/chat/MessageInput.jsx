@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Mic, Send, Paperclip, Smile, Square } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 

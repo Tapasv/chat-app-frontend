@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Authcntxt } from '../../context/authcontext';
 import { useSocket } from '../../hooks/useSocket';
 import { useChat } from '../../hooks/useChat';

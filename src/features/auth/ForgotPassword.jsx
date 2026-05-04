@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { authApi } from '../../lib/api/auth.api';
 import Spinner from '../../components/ui/Spinner';

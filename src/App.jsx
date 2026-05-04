@@ -1,8 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useContext } from 'react';
 import { Authprovider, Authcntxt } from './context/authcontext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'sonner';
 
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
@@ -21,7 +20,7 @@ function AppContent() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-950">
+            <div className="flex items-center justify-center min-h-screen bg-base">
                 <Spinner size="lg" />
             </div>
         );
@@ -43,7 +42,6 @@ function AppContent() {
                     <Route path="/verify-email/:token" element={<VerifyEmail />} />
                 </Routes>
             </ErrorBoundary>
-            <ToastContainer position="top-right" autoClose={3000} theme="dark" />
         </div>
     );
 }
@@ -53,6 +51,20 @@ function App() {
         <BrowserRouter>
             <Authprovider>
                 <AppContent />
+                <Toaster
+                    position="top-right"
+                    theme="dark"
+                    richColors
+                    closeButton
+                    toastOptions={{
+                        style: {
+                            background: '#1c2333',
+                            border: '1px solid #2a3348',
+                            color: '#f1f5f9',
+                            fontSize: '13px',
+                        },
+                    }}
+                />
             </Authprovider>
         </BrowserRouter>
     );

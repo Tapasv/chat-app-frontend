@@ -1,10 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import { apiadmin } from "../lib/api/apiadmin";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from 'sonner';
 import { useNavigate } from "react-router-dom";
 import { LogOut, MessageCircle, Trash2, Settings } from "lucide-react";
 import api from '../lib/axios';
-// import "react-toastify/dist/ReactToastify.css";
 import { Authcntxt } from "../context/authcontext";
 
 const Adminpanel = () => {
