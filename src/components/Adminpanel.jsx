@@ -49,7 +49,6 @@ const Adminpanel = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-6">
-      <ToastContainer />
 
       {/* Header */}
       <div className="max-w-md mx-auto mb-5 flex items-center justify-between md:max-w-6xl">
